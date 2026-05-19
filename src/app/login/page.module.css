@@ -46,10 +46,10 @@
 /* CONTAINER */
 .pageContainer{
     justify-self: center;
-    align-content: center;
-
-    height: calc(100vh - 80px);
+    
+    height: 100%;
     width: 20%;
+    min-width: 300px;
 }
 
 .loginContainer{
@@ -140,7 +140,7 @@
             font-weight: bold;
 
             padding: 10px;
-            width: 268px;
+            width: 90%;
             align-self: center;
         }
 
