@@ -1,0 +1,149 @@
+.header{
+    background-color: #2d7a3a;
+    color: white;
+
+    text-align: center;
+    font-size: 48px;
+    font-weight: bold;
+
+    padding: 10px;
+    height: 80px;
+}
+
+
+/* CONTAINER LOGO */
+.containerLogo{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+    .logo{
+        width: 100px;
+        height: 100px;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.37);
+        border-radius: 20px;
+    }
+
+    .containerLogo h2{
+        font-size: 25px;
+        font-weight: bold;
+        color: white;
+    }
+
+        .containerLogo p{
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        font-size: 12px;
+        color: white;
+    }
+
+/* CONTAINER */
+.pageContainer{
+    justify-self: center;
+    align-content: center;
+
+    height: calc(100vh - 80px);
+    width: 20%;
+}
+
+.loginContainer{
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+    /* ENTRAR */
+    .title{
+        font-size: 20px;
+        font-family: 'Poppins';
+
+        justify-self: start;
+        margin-bottom: 20px;
+    }
+
+    /* FORMULÁRIO */
+    .form{
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+        /* EMAIL & SENHA */
+        .formGroup{
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+            .formGroup p{
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .formGroup input{
+                background-color: #D9D9D9;
+
+                border: 1px solid #606160;
+                border-radius: 10px;
+
+                width: 100%;
+                height: 50px;
+                padding: 5px;
+            }
+
+            .formGroup input:focus{
+                border:1px solid #2d7a3a;
+                box-shadow: 0 0 5px #2d7a3a;
+                outline:none;
+            }
+
+        
+        /* CHECKBOX & ESQUECI MINHA SENHA */
+        .formOptions{
+            display: flex;
+            justify-content: space-between;
+        }
+            /* CHECKBOX */
+            .checkboxContainer{
+                display: flex;
+                gap: 5px;
+            }
+
+                .checkboxContainer input{
+                    accent-color: gray;
+                }
+
+                .checkboxContainer label{
+                    font-size: 12px;
+                }
+
+            /* ESQUECI A SENHA */
+            .forgotPassword{
+                color: #2d7a3a;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+        .submitButton{
+            background-color: #2d7a3a;
+            color: #fff;
+            border-radius: 10px;
+
+            letter-spacing: 2px;
+
+            font-weight: bold;
+
+            padding: 10px;
+            width: 268px;
+            align-self: center;
+        }
+
+
+
+
