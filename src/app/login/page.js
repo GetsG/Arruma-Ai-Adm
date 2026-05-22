@@ -1,3 +1,7 @@
+'use client'
+
+import { useLogin } from "@/hooks/useLogin"
+
 import styles from "./page.module.css"
 
 import Image from "next/image"
@@ -7,10 +11,10 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 export default function Login(){
 
+    const { register, handleSubmit, onSubmit, errors } = useLogin()
+
     return(
         <div className={styles.pageContainer}>
-
-            
 
             {/* LOGO */}
             <div className={styles.containerLogo}>
@@ -27,24 +31,30 @@ export default function Login(){
                 <h2 className={styles.title}>Entrar no Painel</h2>
 
                 {/* FORMULÁRIO */}
-                <form className={styles.form}>
+                <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     {/* INPUT EMAIL */}
                     <div className={styles.formGroup}>
                         <p>Email administrativo</p>
-                        <input/>
+                        <input {...register('email')} />
+                        {errors.email && <p className={styles.erros}>{errors.email.message}</p>}
+
                     </div>
                     
                     {/* INPUT SENHA */}
                     <div className={styles.formGroup}>
                         <p>Senha</p>
-                        <input/>
+                        <input type="password" {...register('senha')} />
+                        {errors.senha && <p className={styles.erros}>{errors.senha.message}</p>}
                     </div>
+
+                    {errors.acesso && <p className={styles.erros}>{errors.acesso.message}</p>}
+
 
                     {/* FORM OPTIONS */}
                     <div className={styles.formOptions}>
                         {/* CHECKBOX */}
                         <div className={styles.checkboxContainer}>
-                            <input type="checkbox"/>
+                            <input type="checkbox" {...register('lembrar')} />
                             <label>Lembrar de mim</label>
                         </div>
 
@@ -53,8 +63,14 @@ export default function Login(){
                     </div> 
 
                     {/* BOTÃO ACESSAR SISTEMA */}
-                    <button className={styles.submitButton}>Entrar</button>
+                    <button type="submit" className={styles.submitButton}>Entrar</button>
                 </form>
+
+                {/* ERROS */}
+                
+                
+
+                
 
             </main>
         </div>
