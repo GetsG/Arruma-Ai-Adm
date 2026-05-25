@@ -1,0 +1,87 @@
+.container{
+    margin-left: 210px;
+    padding: 30px;
+}
+
+.titleDescription{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 30px;
+
+    h2{
+        font-weight: bold;
+        font-size: 25px;
+    }
+
+    p{
+        color: gray;
+        font-size: 12px;
+    }
+}
+
+.tittleTypesReports{
+    font-weight: bold;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+
+.containerReport{
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    .reportTypes{
+        background-color: #fff;
+        display: flex;
+        border:1px solid #e5e7eb;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: start;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+
+
+        .reports{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            h3{
+                font-weight: bold;
+                font-size: 15px;
+            }
+
+            p{
+                font-size: 12px;
+                color: gray;
+            }
+        }
+
+        .imageReport{
+            padding: 5px;
+            width: 50px;
+        }
+
+        .imageArrow{
+            width: 15px;
+        }
+    }
+
+    .reportTypes:hover{
+        border: 1px solid #2d7a3a;
+        transform: scale(1.01);
+
+    }
+
+    .reportTypes:last-child{
+        grid-column: 1/ -1;
+    }
+
+}
+
+
+

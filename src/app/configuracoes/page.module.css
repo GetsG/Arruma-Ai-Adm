@@ -1,0 +1,95 @@
+.container{
+    margin-left: 210px;
+    padding: 30px;
+}
+
+.titleDescription{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 30px;
+
+    h2{
+        font-weight: bold;
+        font-size: 25px;
+    }
+
+    p{
+        color: gray;
+        font-size: 12px;
+    }
+}
+
+.tittleTypesConfigs{
+    margin-bottom: 30px;
+
+    h3{
+        font-weight: bold;
+        font-size: 22px;
+    }
+
+    p{
+        color: gray;
+        font-size: 12px;
+    }
+}
+
+
+.containerConfigs{
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    .configTypes{
+        background-color: #fff;
+        display: flex;
+        border:1px solid #e5e7eb;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: start;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+
+
+        .config{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            h3{
+                font-weight: bold;
+                font-size: 15px;
+            }
+
+            p{
+                font-size: 12px;
+                color: gray;
+            }
+        }
+
+        .imageConfig{
+            padding: 5px;
+            width: 50px;
+        }
+
+        .imageArrow{
+            width: 15px;
+        }
+    }
+
+    .configTypes:hover{
+        border: 1px solid #2d7a3a;
+        transform: scale(1.01);
+
+    }
+
+    .configTypes:last-child{
+        grid-column: 1/ -1;
+    }
+
+}
+
+
+

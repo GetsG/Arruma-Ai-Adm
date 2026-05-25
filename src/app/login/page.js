@@ -14,7 +14,7 @@ export default function Login(){
     const { register, handleSubmit, onSubmit, errors } = useLogin()
 
     return(
-        <div className={styles.pageContainer}>
+        <div className={styles.container}>
 
             {/* LOGO */}
             <div className={styles.containerLogo}>

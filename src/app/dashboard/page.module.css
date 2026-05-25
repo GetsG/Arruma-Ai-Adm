@@ -1,0 +1,29 @@
+.container{
+    margin-left: 210px;
+    padding: 30px;
+}
+
+.titleDescription{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 30px;
+
+    h2{
+        font-weight: bold;
+        font-size: 25px;
+    }
+
+    p{
+        color: gray;
+        font-size: 12px;
+    }
+}
+
+.selects{
+    display: grid;
+    grid-template-columns: repeat(4, 150px);
+    grid-template-rows: repeat(2, auto);
+    gap: 16px;
+}
+
