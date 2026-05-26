@@ -1,20 +1,24 @@
 'use client'
 import Nav from "../components/Nav/Nav";
-import { useAuth } from "@/hooks/useAuth";
 import styles from "./page.module.css"
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
 import { useState } from "react";
 import { selectSx } from "../styles/selectSX";
+import CardReport from "../components/Report/CardReport";
+import { useReport } from "@/hooks/useReport";
+import { useAuth } from "@/hooks/useAuth";
 
 
 export default function ocorrencias(){
 
     useAuth();
+    const { ocorrencias, paginaAtual, setPaginaAtual, totalPaginas } = useReport();
     const [categoria, setCategoria] = useState("todas");
     const [bairro, setBairro] = useState("todas");
     const [prioridade, setPrioridade] = useState("todas");
     const [status, setStatus] = useState("todas");
     const [periodo, setPeriodo] = useState("todas");
+
     
     return(
 
@@ -73,8 +77,12 @@ export default function ocorrencias(){
                     <button className={styles.buttonRemoveFilters}>Limpar filtros</button>
             </div>
 
-
-
+            <CardReport
+                ocorrencias={ocorrencias}
+                paginaAtual={paginaAtual}
+                totalPaginas={totalPaginas}
+                onPaginaChange={setPaginaAtual}
+            />
 
         </main>
 

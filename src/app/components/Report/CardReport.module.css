@@ -1,0 +1,156 @@
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    margin-top: 20px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.table thead tr {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.table td {
+    background-color: #fff;
+    padding: 14px 16px;
+    color: #111827;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.protocolo {
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Badges de prioridade */
+.badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.alta {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.critica {
+    background-color: #fce7f3;
+    color: #db2777;
+}
+
+.moderada {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.baixa {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+/* Status */
+.status {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.emAnalise {
+    color: #7c3aed;
+}
+
+.atribuida {
+    color: #2563eb;
+}
+
+.aguardandoOS {
+    color: #d97706;
+}
+
+.nova {
+    color: #6b7280;
+}
+
+/* Botões de ação */
+.acoes {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.acoes button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    color: #6b7280;
+}
+
+.acoes button:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Paginação */
+.paginacao {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btnPagina {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #374151;
+}
+
+.btnPagina:hover:not(:disabled) {
+    border-color: #2d7a3a;
+    color: #2d7a3a;
+}
+
+.btnPagina:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.infoPagina {
+    font-size: 13px;
+    color: #6b7280;
+}
