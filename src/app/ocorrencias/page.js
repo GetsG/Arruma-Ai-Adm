@@ -12,12 +12,23 @@ import { useAuth } from "@/hooks/useAuth";
 export default function ocorrencias(){
 
     useAuth();
-    const { ocorrencias, paginaAtual, setPaginaAtual, totalPaginas } = useReport();
+    const [busca, setBusca] = useState("");
     const [categoria, setCategoria] = useState("todas");
     const [bairro, setBairro] = useState("todas");
     const [prioridade, setPrioridade] = useState("todas");
     const [status, setStatus] = useState("todas");
     const [periodo, setPeriodo] = useState("todas");
+
+    const { ocorrencias, paginaAtual, setPaginaAtual, totalPaginas } = useReport({ busca, categoria, status, prioridade, bairro, periodo });
+
+    function limparFiltros() {
+        setBusca("");
+        setCategoria("todas");
+        setBairro("todas");
+        setPrioridade("todas");
+        setStatus("todas");
+        setPeriodo("todas");
+    }
 
     
     return(
@@ -28,7 +39,7 @@ export default function ocorrencias(){
 
         <main>
             <div className={styles.search}>
-                <input type="search" placeholder="Buscar por protocolo, título, endereço, bairro ou palavra-chave..."/>
+                <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por protocolo, título, endereço, bairro ou palavra-chave..."/>
                 <button>+ Nova Ocorrência</button>
             </div>
 
@@ -74,7 +85,7 @@ export default function ocorrencias(){
                         </Select>
                     </FormControl>
 
-                    <button className={styles.buttonRemoveFilters}>Limpar filtros</button>
+                    <button className={styles.buttonRemoveFilters} onClick={limparFiltros}>Limpar filtros</button>
             </div>
 
             <CardReport
