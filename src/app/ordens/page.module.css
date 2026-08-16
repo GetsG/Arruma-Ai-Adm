@@ -1,79 +1,437 @@
-.container{
+.container {
     margin-left: 210px;
     padding: 30px;
 }
 
-.search{
+/* SEARCH BAR */
+.search {
     display: flex;
-    gap: 20px;
     width: 100%;
     margin-bottom: 20px;
 
-    input{
+    input {
         background-color: #fff;
         border-radius: 10px;
-        border:1px solid #e5e7eb;
-        width: 90%;
+        border: 1px solid #e5e7eb;
+        width: 100%;
         padding: 10px;
-    }
-
-    button{
-        background:#2d7a3a; 
-        color: #fff;
-        padding: 5px;
-        font-size: 12px;
-        border-radius: 10px;
-        width: 12%;
-        font-weight: bold;
-        font-size: 15px;
-
+        font-size: 14px;
     }
 }
 
-.titleDescription{
+/* TITLE */
+.titleDescription {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 
-    h2{
+    h2 {
         font-weight: bold;
         font-size: 25px;
     }
 
-    p{
+    p {
         color: gray;
         font-size: 12px;
     }
 }
 
-.selects{
-    display: grid;
-    grid-template-columns: repeat(6, 150px);
-    gap: 10px;
-
-    .buttonRemoveFilters{
-        width: 150px;
-        background-color: #fff;
-        border: 1px solid rgba(128, 128, 128, 0.507);
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 13px;
-
-    }
-
-    .buttonRemoveFilters:hover{
-        border: 1px solid #2d7a3a;
-        border-radius: 8px;
-        cursor: pointer;
-
-        font-weight: bold;
-        color: #2d7a3a;
-        font-size: 13px;
-
-    }
+/* LAYOUT */
+.contentArea {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
 }
 
+.tablesArea {
+    flex: 1;
+    min-width: 0;
+}
 
+/* TABLE WRAPPER CARD */
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
 
+.tableWrapperAtribuidas {
+    margin-top: 24px;
+}
+
+/* SECTION HEADER */
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dotPendente { background: #f97316; }
+.dotAtribuida { background: #2d7a3a; }
+.dotConcluida { background: #1D4ED8; }
+
+.sectionTitulo {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.badge {
+    background: #f97316;
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badgeGreen {
+    background: #2d7a3a;
+}
+
+.badgeBlue {
+    background: #1D4ED8;
+}
+
+/* TABLE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.table thead tr {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.table td {
+    background-color: #fff;
+    padding: 13px 16px;
+    color: #111827;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover td {
+    background-color: #f9fafb;
+}
+
+.table tbody tr.rowSelected td {
+    background-color: #f0fdf4;
+}
+
+.table tbody tr.rowSelected:hover td {
+    background-color: #dcfce7;
+}
+
+.thCheck,
+.tdCheck {
+    width: 40px;
+    padding-left: 16px !important;
+}
+
+.osId {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    font-family: monospace;
+}
+
+.protocolo {
+    font-weight: 600;
+    color: #374151;
+}
+
+.tdEndereco {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* AÇÕES */
+.acoes {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.acoes button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    color: #6b7280;
+}
+
+.acoes button:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* PAGINAÇÃO */
+.paginacao {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 0 0 10px 10px;
+}
+
+.paginacaoInfo {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.paginacaoBotoes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btnNav {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #374151;
+    font-weight: 600;
+}
+
+.btnNav:hover:not(:disabled) {
+    border-color: #2d7a3a;
+    color: #2d7a3a;
+}
+
+.btnNav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btnNum {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #374151;
+    min-width: 34px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.btnNum:hover {
+    border-color: #2d7a3a;
+    color: #2d7a3a;
+}
+
+.btnNumAtivo {
+    background-color: #2d7a3a;
+    color: #fff !important;
+    border-color: #2d7a3a;
+    font-weight: 600;
+}
+
+/* PAINEL LATERAL */
+.painel {
+    width: 320px;
+    flex-shrink: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.painelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.painelTitulo {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.painelEditar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+}
+
+.painelEditar:hover {
+    background: #f3f4f6;
+}
+
+.painelSubheader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px 4px;
+    flex-wrap: wrap;
+}
+
+.painelOsId {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.painelStatusChip {
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+.painelProtocoloRow {
+    padding: 4px 16px 10px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.painelFoto {
+    margin: 0 16px 12px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.painelFoto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.painelFotoPlaceholder {
+    width: 100%;
+    height: 100%;
+    background: #9e9282;
+    border-radius: 8px;
+}
+
+.painelGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.painelGridItem {
+    padding: 10px 16px;
+    border-right: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.painelGridItem:nth-child(even) {
+    border-right: none;
+}
+
+.painelGridFull {
+    grid-column: 1 / -1;
+    border-right: none;
+}
+
+.painelGridItem:last-child {
+    border-bottom: none;
+}
+
+.painelLabel {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.painelValue {
+    font-size: 13px;
+    color: #111827;
+    font-weight: 500;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.painelSecao {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.painelDescricao {
+    font-size: 13px;
+    color: #374151;
+    margin: 4px 0 0;
+    line-height: 1.5;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.painelAtribuir {
+    padding: 14px 16px;
+}
+
+.btnAtribuir {
+    width: 100%;
+    background: #2d7a3a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btnAtribuir:hover {
+    background: #255f2e;
+}

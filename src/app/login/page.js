@@ -8,13 +8,16 @@ import Image from "next/image"
 import Logo from "../../../public/Logo/Logo.png"
 
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import Loading from "../components/Loading/Loading";
 
 export default function Login(){
 
-    const { register, handleSubmit, onSubmit, errors } = useLogin()
+    const { register, handleSubmit, onSubmit, errors, isLoading } = useLogin()
 
     return(
         <div className={styles.container}>
+
+            {isLoading && <Loading overlay size="large" text="Entrando..." />}
 
             {/* LOGO */}
             <div className={styles.containerLogo}>
@@ -63,7 +66,9 @@ export default function Login(){
                     </div> 
 
                     {/* BOTÃO ACESSAR SISTEMA */}
-                    <button type="submit" className={styles.submitButton}>Entrar</button>
+                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                        Entrar
+                    </button>
                 </form>
 
                 {/* ERROS */}

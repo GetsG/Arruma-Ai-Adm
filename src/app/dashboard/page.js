@@ -2,22 +2,62 @@
 import { useAuth } from "@/hooks/useAuth";
 import Nav from "../components/Nav/Nav";
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css"
 import { selectSx } from "../styles/selectSX";
+import MapGoiania from "../components/Map/MapGoianiaWrapper";
+import { reports } from "../services/reports";
+import Loading from "../components/Loading/Loading";
+
+const MAPA_CATEGORIAS = {
+    'buraco na via':  'Buraco na via',
+    'buraco na rua':  'Buraco na via',
+    'iluminação':     'Iluminação',
+    'iluminacao':     'Iluminação',
+    'saneamento':     'Saneamento',
+    'segurança':      'Segurança',
+    'seguranca':      'Segurança',
+    'transporte':     'Transporte',
+}
+
+function normalizarCategoria(categoria) {
+    if (!categoria) return null
+    return MAPA_CATEGORIAS[categoria.toLowerCase()] ?? null
+}
 
 
 export default function dashboard(){
 
     useAuth()
-    const [status, setStatus] = useState("todas");
-    const [categoria, setCategoria] = useState("todas");
-    const [prioridade, setPrioridade] = useState("todas");
-    const [equipe, setEquipe] = useState("todas");
-    const [bairro, setBairro] = useState("todas");
-    const [regiao, setRegiao] = useState("todas");
-    const [periodo, setPeriodo] = useState("todas");
-    const [tipoVia, setTipoVia] = useState("todas");
+    const [tipoOcorrencia, setTipoOcorrencia] = useState("todas");
+    const [pontosMapa, setPontosMapa] = useState([])
+    const [loadingMapa, setLoadingMapa] = useState(true)
+
+    useEffect(() => {
+        setLoadingMapa(true)
+        reports()
+            .then(data => {
+                const pontos = data
+                    .filter(o => o.endereco?.latitude && o.endereco?.longitude)
+                    .map(o => ({
+                        id: o.problemaid,
+                        lat: parseFloat(o.endereco.latitude),
+                        lng: parseFloat(o.endereco.longitude),
+                        titulo: o.endereco.rua || o.endereco.ponto_referencia || '',
+                        descricao: o.descricao,
+                        tipo: normalizarCategoria(o.categoria),
+                        validado: o.validado ?? false,
+                    }))
+                    .filter(p => !isNaN(p.lat) && !isNaN(p.lng))
+                setPontosMapa(pontos)
+            })
+            .catch(err => console.error('Erro ao buscar ocorrências:', err))
+            .finally(() => setLoadingMapa(false))
+    }, [])
+
+    const pontosFiltrados = tipoOcorrencia === "todas"
+        ? pontosMapa
+        : pontosMapa.filter(p => p.tipo === tipoOcorrencia)
 
     return(
 
@@ -34,60 +74,52 @@ export default function dashboard(){
 
             <div className={styles.selects}>
                 <FormControl sx={selectSx}>
-                    <InputLabel>Status</InputLabel>
-                    <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <InputLabel>Tipo de ocorrência</InputLabel>
+                    <Select label="Tipo de ocorrência" value={tipoOcorrencia} onChange={(e) => setTipoOcorrencia(e.target.value)}>
                         <MenuItem value="todas">Todas</MenuItem>
+                        <MenuItem value="Buraco na via">Buraco na via</MenuItem>
+                        <MenuItem value="Iluminação">Iluminação</MenuItem>
+                        <MenuItem value="Saneamento">Saneamento</MenuItem>
+                        <MenuItem value="Segurança">Segurança</MenuItem>
+                        <MenuItem value="Transporte">Transporte</MenuItem>
                     </Select>
                 </FormControl>
+            </div>
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Categoria</InputLabel>
-                    <Select label="Categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+            <div className={styles.mapContainer}>
+                {loadingMapa
+                    ? <Loading size="large" text="Carregando mapa..." />
+                    : <MapGoiania pontos={pontosFiltrados} />
+                }
+            </div>
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Prioridade</InputLabel>
-                    <Select label="Prioridade" value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+            <div className={styles.legenda}>
+                <div className={styles.legendaGrupo}>
+                    <span className={styles.legendaTitulo}>Áreas</span>
+                    <div className={styles.legendaItem}>
+                        <span className={styles.legendaCor} style={{ background: '#E53935', opacity: 0.45 }} />
+                        Setor com hospital próximo
+                    </div>
+                </div>
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Equipe</InputLabel>
-                    <Select label="Equipe" value={equipe} onChange={(e) => setEquipe(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+                <div className={styles.legendaDivisor} />
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Bairro</InputLabel>
-                    <Select label="Bairro" value={bairro} onChange={(e) => setBairro(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+                <div className={styles.legendaGrupo}>
+                    <span className={styles.legendaTitulo}>Tipo de ocorrência</span>
+                    <div className={styles.legendaItem}><span className={styles.legendaIcone} style={{ background: '#DC2626' }}>🕳️</span> Buraco na via</div>
+                    <div className={styles.legendaItem}><span className={styles.legendaIcone} style={{ background: '#DC2626' }}>💡</span> Iluminação</div>
+                    <div className={styles.legendaItem}><span className={styles.legendaIcone} style={{ background: '#DC2626' }}>💧</span> Saneamento</div>
+                    <div className={styles.legendaItem}><span className={styles.legendaIcone} style={{ background: '#DC2626' }}>🚨</span> Segurança</div>
+                    <div className={styles.legendaItem}><span className={styles.legendaIcone} style={{ background: '#DC2626' }}>🚌</span> Transporte</div>
+                </div>
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Região</InputLabel>
-                    <Select label="Região" value={regiao} onChange={(e) => setRegiao(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+                <div className={styles.legendaDivisor} />
 
-                <FormControl sx={selectSx}>
-                    <InputLabel>Período</InputLabel>
-                    <Select label="Período" value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
-
-                <FormControl sx={selectSx}>
-                    <InputLabel>Tipo de via</InputLabel>
-                    <Select label="Tipo de via" value={tipoVia} onChange={(e) => setTipoVia(e.target.value)}>
-                        <MenuItem value="todas">Todas</MenuItem>
-                    </Select>
-                </FormControl>
+                <div className={styles.legendaGrupo}>
+                    <span className={styles.legendaTitulo}>Validação</span>
+                    <div className={styles.legendaItem}><span className={styles.legendaCor} style={{ background: '#DC2626' }} /> Não validada</div>
+                    <div className={styles.legendaItem}><span className={styles.legendaCor} style={{ background: '#15803D' }} /> Validada</div>
+                </div>
             </div>
 
         </main>

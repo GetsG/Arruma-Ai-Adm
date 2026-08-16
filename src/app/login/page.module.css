@@ -130,6 +130,18 @@
             padding: 10px;
             width: 90%;
             align-self: center;
+            cursor: pointer;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
+        }
+
+        .submitButton:disabled{
+            opacity: 0.75;
+            cursor: not-allowed;
         }
 
 /* ERROS */
