@@ -1,22 +1,23 @@
 'use client'
 import Nav from "../components/Nav/Nav";
 import styles from "./page.module.css"
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { selectSx } from "../styles/selectSX";
 import CardReport from "../components/Report/CardReport";
 import { useReport } from "@/hooks/useReport";
 import { useAuth } from "@/hooks/useAuth";
+import { deleteProblem } from "../services/reports";
 
 const STATUS_COLOR = {
-    'Em análise':   '#7c3aed',
-    'Atribuída':    '#2563eb',
-    'Aguardando OS':'#d97706',
-    'Nova':         '#6b7280',
-    'Em execução':  '#16a34a',
-    'Concluída':    '#16a34a',
+    'Pendente':      '#6b7280',
+    'Em andamento':  '#2563eb',
+    'Resolvido':     '#16a34a',
+    'Em análise':    '#7c3aed',
+    'Atribuído':     '#d97706',
+    'Cancelado':     '#dc2626',
 }
+
+const STATUS_LISTA = Object.keys(STATUS_COLOR)
 
 export default function ocorrencias(){
 
@@ -25,16 +26,116 @@ export default function ocorrencias(){
     const [busca, setBusca] = useState("");
     const [categoria, setCategoria] = useState("todas");
     const [status, setStatus] = useState("todas");
-    const [periodo, setPeriodo] = useState("todas");
+    const [periodoInicio, setPeriodoInicio] = useState("");
+    const [periodoFim, setPeriodoFim] = useState("");
     const [selecionada, setSelecionada] = useState(null);
+    const [paraExcluir, setParaExcluir] = useState(null);
+    const [excluindo, setExcluindo] = useState(false);
+    const [erroExclusao, setErroExclusao] = useState(null);
+    const [selecionados, setSelecionados] = useState(new Set());
+    const [confirmandoLote, setConfirmandoLote] = useState(false);
+    const [excluindoLote, setExcluindoLote] = useState(false);
+    const [erroExclusaoLote, setErroExclusaoLote] = useState(null);
 
-    const { ocorrencias, paginaAtual, setPaginaAtual, totalPaginas, total, isLoading } = useReport({ busca, categoria, status, periodo });
+    const {
+        ocorrencias, paginaAtual, setPaginaAtual, totalPaginas, total, isLoading,
+        categoriasDisponiveis, removerOcorrencia,
+    } = useReport({ busca, categoria, status, periodoInicio, periodoFim });
+
+    useEffect(() => {
+        setSelecionados(new Set());
+    }, [paginaAtual, busca, categoria, status, periodoInicio, periodoFim]);
+
+    function toggleSelecionado(id) {
+        setSelecionados(prev => {
+            const novo = new Set(prev);
+            if (novo.has(id)) novo.delete(id);
+            else novo.add(id);
+            return novo;
+        });
+    }
+
+    function toggleTodos() {
+        const todosSelecionados = ocorrencias.length > 0 && ocorrencias.every(o => selecionados.has(o.problemaid));
+        setSelecionados(prev => {
+            const novo = new Set(prev);
+            ocorrencias.forEach(o => {
+                if (todosSelecionados) novo.delete(o.problemaid);
+                else novo.add(o.problemaid);
+            });
+            return novo;
+        });
+    }
+
+    function cancelarSelecao() {
+        setSelecionados(new Set());
+    }
+
+    function cancelarExclusaoLote() {
+        if (excluindoLote) return;
+        setConfirmandoLote(false);
+        setErroExclusaoLote(null);
+    }
+
+    async function confirmarExclusaoLote() {
+        setExcluindoLote(true);
+        setErroExclusaoLote(null);
+        const ids = [...selecionados];
+        const resultados = await Promise.allSettled(ids.map(id => deleteProblem(id)));
+        const falhas = [];
+        resultados.forEach((r, i) => {
+            if (r.status === 'fulfilled') {
+                removerOcorrencia(ids[i]);
+                if (selecionada?.problemaid === ids[i]) setSelecionada(null);
+            } else {
+                falhas.push(ids[i]);
+            }
+        });
+        setSelecionados(new Set(falhas));
+        if (falhas.length > 0) {
+            setErroExclusaoLote(`${falhas.length} ocorrência(s) não puderam ser excluídas. Tente novamente.`);
+        } else {
+            setConfirmandoLote(false);
+        }
+        setExcluindoLote(false);
+    }
 
     function limparFiltros() {
         setBusca("");
         setCategoria("todas");
         setStatus("todas");
-        setPeriodo("todas");
+        setPeriodoInicio("");
+        setPeriodoFim("");
+    }
+
+    const qtdFiltrosAtivos = [categoria !== "todas", status !== "todas", !!periodoInicio || !!periodoFim]
+        .filter(Boolean).length;
+    const filtrosAtivos = qtdFiltrosAtivos > 0;
+
+    function pedirExclusao(item) {
+        setErroExclusao(null);
+        setParaExcluir(item);
+    }
+
+    function cancelarExclusao() {
+        if (excluindo) return;
+        setParaExcluir(null);
+        setErroExclusao(null);
+    }
+
+    async function confirmarExclusao() {
+        setExcluindo(true);
+        setErroExclusao(null);
+        try {
+            await deleteProblem(paraExcluir.problemaid);
+            removerOcorrencia(paraExcluir.problemaid);
+            if (selecionada?.problemaid === paraExcluir.problemaid) setSelecionada(null);
+            setParaExcluir(null);
+        } catch (err) {
+            setErroExclusao("Não foi possível excluir a ocorrência. Tente novamente.");
+        } finally {
+            setExcluindo(false);
+        }
     }
 
 
@@ -47,7 +148,7 @@ export default function ocorrencias(){
         <main>
             <div className={styles.search}>
                 <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por protocolo, título, endereço, bairro ou palavra-chave..."/>
-                <button>+ Nova Ocorrência</button>
+                <button onClick={() => router.push('/ocorrencias/criar')}>+ Nova Ocorrência</button>
             </div>
 
             <div className={styles.titleDescription}>
@@ -55,34 +156,100 @@ export default function ocorrencias(){
                 <p>Acompanhe e gerencie todas as ocorrências registradas pelos cidadãos.</p>
             </div>
 
-            <div className={styles.selects}>
+            <div className={styles.filtrosCard}>
+                <div className={styles.filtrosHeader}>
+                    <div className={styles.filtrosTituloWrap}>
+                        <span className={styles.filtrosIcone}>🔍</span>
+                        <span className={styles.filtrosTitulo}>Filtros</span>
+                        {filtrosAtivos && (
+                            <span className={styles.filtrosBadge}>{qtdFiltrosAtivos}</span>
+                        )}
+                    </div>
+                    <button
+                        className={styles.buttonRemoveFilters}
+                        onClick={limparFiltros}
+                        disabled={!filtrosAtivos}
+                    >
+                        ✕ Limpar filtros
+                    </button>
+                </div>
 
-                    <FormControl sx={selectSx}>
-                        <InputLabel>Categoria</InputLabel>
-                        <Select label="Categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-                            <MenuItem value="todas">Todas</MenuItem>
-                        </Select>
-                    </FormControl>
+                <div className={styles.filtrosGrid}>
 
-                    <FormControl sx={selectSx}>
-                        <InputLabel>Status</InputLabel>
-                        <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                            <MenuItem value="todas">Todos</MenuItem>
-                        </Select>
-                    </FormControl>
+                    <div className={styles.campoFiltro}>
+                        <label className={styles.filtroLabel}>Categoria</label>
+                        <select
+                            className={styles.filtroSelect}
+                            value={categoria}
+                            onChange={(e) => setCategoria(e.target.value)}
+                        >
+                            <option value="todas">Todas as categorias</option>
+                            {categoriasDisponiveis.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                    <FormControl className={styles.filters} sx={selectSx}>
-                        <InputLabel>Periodo</InputLabel>
-                        <Select label="Periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
-                            <MenuItem value="todas">Todos</MenuItem>
-                        </Select>
-                    </FormControl>
+                    <div className={styles.campoFiltro}>
+                        <label className={styles.filtroLabel}>Status</label>
+                        <select
+                            className={styles.filtroSelect}
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                        >
+                            <option value="todas">Todos os status</option>
+                            {STATUS_LISTA.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                    <button className={styles.buttonRemoveFilters} onClick={limparFiltros}>Limpar filtros</button>
+                    <div className={styles.campoFiltro}>
+                        <label className={styles.filtroLabel}>Período</label>
+                        <div className={styles.periodoStackNovo}>
+                            <div className={styles.periodoLinha}>
+                                <span className={styles.periodoTag}>De</span>
+                                <input
+                                    type="date"
+                                    className={styles.filtroDateInput}
+                                    value={periodoInicio}
+                                    max={periodoFim || undefined}
+                                    onChange={(e) => setPeriodoInicio(e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.periodoLinha}>
+                                <span className={styles.periodoTag}>Até</span>
+                                <input
+                                    type="date"
+                                    className={styles.filtroDateInput}
+                                    value={periodoFim}
+                                    min={periodoInicio || undefined}
+                                    onChange={(e) => setPeriodoFim(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             <div className={styles.contentArea}>
                 <div className={styles.tableArea}>
+                    {selecionados.size > 0 && (
+                        <div className={styles.barraSelecao}>
+                            <span className={styles.barraSelecaoTexto}>
+                                {selecionados.size} {selecionados.size === 1 ? 'ocorrência selecionada' : 'ocorrências selecionadas'}
+                            </span>
+                            <div className={styles.barraSelecaoAcoes}>
+                                <button className={styles.btnCancelarSelecao} onClick={cancelarSelecao}>
+                                    Cancelar seleção
+                                </button>
+                                <button className={styles.btnExcluirLote} onClick={() => setConfirmandoLote(true)}>
+                                    🗑️ Excluir selecionadas
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     <CardReport
                         ocorrencias={ocorrencias}
                         paginaAtual={paginaAtual}
@@ -92,7 +259,11 @@ export default function ocorrencias(){
                         onSelect={setSelecionada}
                         selecionada={selecionada}
                         onEdit={(id) => router.push(`/ocorrencias/editar/${id}`)}
+                        onDelete={pedirExclusao}
                         isLoading={isLoading}
+                        selecionados={selecionados}
+                        onToggleSelecionado={toggleSelecionado}
+                        onToggleTodos={toggleTodos}
                     />
                 </div>
 
@@ -173,6 +344,65 @@ export default function ocorrencias(){
                     </div>
                 )}
             </div>
+
+            {paraExcluir && (
+                <div className={styles.modalOverlay} onClick={cancelarExclusao}>
+                    <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+                        <h3>Excluir ocorrência?</h3>
+                        <p>
+                            Essa ação não pode ser desfeita. A ocorrência{' '}
+                            <strong>{paraExcluir.protocolo}</strong> — {paraExcluir.titulo} — será
+                            removida permanentemente.
+                        </p>
+                        {erroExclusao && <p className={styles.modalErro}>{erroExclusao}</p>}
+                        <div className={styles.modalAcoes}>
+                            <button
+                                className={styles.modalCancelarBtn}
+                                onClick={cancelarExclusao}
+                                disabled={excluindo}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className={styles.modalExcluirBtn}
+                                onClick={confirmarExclusao}
+                                disabled={excluindo}
+                            >
+                                {excluindo ? 'Excluindo...' : 'Excluir'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {confirmandoLote && (
+                <div className={styles.modalOverlay} onClick={cancelarExclusaoLote}>
+                    <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+                        <h3>Excluir {selecionados.size} {selecionados.size === 1 ? 'ocorrência' : 'ocorrências'}?</h3>
+                        <p>
+                            Essa ação não pode ser desfeita. As ocorrências selecionadas serão
+                            removidas permanentemente.
+                        </p>
+                        {erroExclusaoLote && <p className={styles.modalErro}>{erroExclusaoLote}</p>}
+                        <div className={styles.modalAcoes}>
+                            <button
+                                className={styles.modalCancelarBtn}
+                                onClick={cancelarExclusaoLote}
+                                disabled={excluindoLote}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className={styles.modalExcluirBtn}
+                                onClick={confirmarExclusaoLote}
+                                disabled={excluindoLote}
+                            >
+                                {excluindoLote ? 'Excluindo...' : 'Excluir'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </main>
 

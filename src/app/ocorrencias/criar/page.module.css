@@ -4,15 +4,6 @@
     min-height: 100vh;
 }
 
-.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 300px;
-    font-size: 15px;
-    color: #6b7280;
-}
-
 /* ── Topo ── */
 .topBar {
     display: flex;
@@ -91,102 +82,6 @@
     cursor: not-allowed;
 }
 
-.btnExcluirOcorrencia {
-    background: #fff;
-    border: 1px solid #fecaca;
-    color: #dc2626;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.btnExcluirOcorrencia:hover {
-    background: #fef2f2;
-    border-color: #fca5a5;
-}
-
-/* ── Modal de confirmação de exclusão ── */
-.modalOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 24, 39, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.modalCard {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    width: 380px;
-    max-width: 100%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.modalCard h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 8px;
-}
-
-.modalCard p {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.modalErro {
-    color: #dc2626 !important;
-    font-weight: 600;
-}
-
-.modalAcoes {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.modalAcoes button {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.modalAcoes button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.modalCancelarBtn {
-    background: #fff;
-    border: 1px solid #d1d5db;
-    color: #374151;
-}
-
-.modalCancelarBtn:hover:not(:disabled) {
-    border-color: #9ca3af;
-}
-
-.modalExcluirBtn {
-    background: #dc2626;
-    border: none;
-    color: #fff;
-}
-
-.modalExcluirBtn:hover:not(:disabled) {
-    background: #b91c1c;
-}
-
 /* ── Mensagem de feedback ── */
 .mensagem {
     padding: 12px 16px;
@@ -224,7 +119,7 @@
 }
 
 .rightCol {
-    width: 280px;
+    width: 300px;
     flex-shrink: 0;
     position: sticky;
     top: 24px;
@@ -245,20 +140,13 @@
     margin-bottom: 18px;
 }
 
-/* ── Grids de campos ── */
-.gridTres {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-}
-
+/* ── Campos ── */
 .gridDois {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 
-/* ── Campos individuais ── */
 .campoGroup {
     display: flex;
     flex-direction: column;
@@ -273,7 +161,7 @@
     letter-spacing: 0.3px;
 }
 
-.inputReadonly,
+.input,
 .select {
     width: 100%;
     padding: 8px 10px;
@@ -287,22 +175,20 @@
     font-family: inherit;
 }
 
+.input:focus,
 .select:focus {
     border-color: #2d7a3a;
     box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.1);
 }
 
-.inputReadonly {
-    background: #f9fafb;
-    color: #6b7280;
-    cursor: default;
+.campoErro {
+    border-color: #dc2626 !important;
 }
 
-.selectStatus {
-    border-color: #2d7a3a;
-    background: #f0fdf4;
-    color: #166534;
-    font-weight: 600;
+.erroTexto {
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 500;
 }
 
 /* ── Textarea ── */
@@ -329,13 +215,6 @@
     box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.1);
 }
 
-.textareaReadonly {
-    background: #f9fafb;
-    color: #374151;
-    cursor: default;
-    resize: none;
-}
-
 .charCount {
     display: block;
     text-align: right;
@@ -344,7 +223,7 @@
     margin-top: 4px;
 }
 
-/* ── Mapa na localização ── */
+/* ── Localização / mapa ── */
 .localizacaoHeader {
     display: flex;
     align-items: center;
@@ -357,7 +236,7 @@
     margin-bottom: 0;
 }
 
-.linkMaps {
+.linkAcao {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -368,151 +247,99 @@
     border: 1px solid #bbf7d0;
     border-radius: 999px;
     padding: 5px 12px;
-    text-decoration: none;
+    cursor: pointer;
     white-space: nowrap;
 }
 
-.linkMaps:hover {
+.linkAcao:hover {
     background: #dcfce7;
     border-color: #86efac;
 }
 
-.semLocalizacao {
+.dicaMapa {
     font-size: 12px;
     color: #9ca3af;
-    white-space: nowrap;
+    margin: 10px 0;
 }
 
 .mapaWrapper {
-    height: 220px;
+    height: 260px;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     overflow: hidden;
 }
 
-/* ── Sidebar ── */
-.sidebar {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    overflow: hidden;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-}
-
-.sidebarHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 14px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    background: none;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    font-family: inherit;
-    cursor: pointer;
-    text-align: left;
-}
-
-.sidebarTitulo {
-    font-size: 14px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.sidebarCollapse {
-    font-size: 14px;
-    color: #9ca3af;
-    display: inline-block;
-    transition: transform 0.15s ease;
-}
-
-.sidebarCollapseFechado {
-    transform: rotate(180deg);
-}
-
-.sidebarSecao {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.sidebarSecao:last-child {
-    border-bottom: none;
-}
-
-.sidebarLabel {
-    font-size: 11px;
-    font-weight: 600;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    display: block;
-    margin-bottom: 6px;
-}
-
-.sidebarTituloSecao {
-    font-size: 13px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 10px;
-}
-
-/* ── Foto ── */
-.fotoBox {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-
-.fotoImg {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    display: block;
-    border-radius: 8px;
-}
-
-/* ── Histórico ── */
-.historico {
+/* ── Imagens ── */
+.dropzone {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    padding: 24px 12px;
+    cursor: pointer;
+    text-align: center;
+    background: #fafafa;
 }
 
-.historicoItem {
-    position: relative;
+.dropzone:hover {
+    border-color: #2d7a3a;
+    background: #f0fdf4;
 }
 
-.historicoLinha {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
+.dropzoneIcone {
+    font-size: 26px;
+    line-height: 1;
 }
 
-.historicoDot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 3px;
-}
-
-.historicoConteudo {
-    flex: 1;
-}
-
-.historicoData {
-    font-size: 11px;
-    color: #9ca3af;
-    margin: 0 0 2px;
-}
-
-.historicoTexto {
-    font-size: 12px;
+.dropzoneTexto {
+    font-size: 13px;
+    font-weight: 600;
     color: #374151;
-    margin: 0;
-    line-height: 1.4;
+}
+
+.imagensGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.imagemThumb {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    aspect-ratio: 1;
+}
+
+.imagemThumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.imagemRemover {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.imagemRemover:hover {
+    background: #dc2626;
 }

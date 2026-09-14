@@ -1,6 +1,8 @@
+'use client'
 import styles from "./Nav.module.css"
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import Logo from "../../../../public/Logo/Logo.png"
 
@@ -11,8 +13,17 @@ import ReceiptIcon from '@mui/icons-material/Receipt';              //Ordem De S
 import BarChartIcon from '@mui/icons-material/BarChart';            //Relatórios
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';          //Usuários
 import SettingsIcon from '@mui/icons-material/Settings';            //Configurações
+import LogoutIcon from '@mui/icons-material/Logout';                //Sair
 
 export default function Nav({tela}){
+    const router = useRouter()
+
+    function handleSair() {
+        localStorage.removeItem('token')
+        sessionStorage.removeItem('token')
+        router.push('/login')
+    }
+
     return(
         <nav className={styles.navItems}>
 
@@ -50,6 +61,11 @@ export default function Nav({tela}){
                 <SettingsIcon sx={{color: tela === "configuracoes" ? "#fff" : "#6b7280"}}/>
                 <p>Configurações</p>
             </a>
+
+            <button className={styles.navItemSair} onClick={handleSair}>
+                <LogoutIcon sx={{color: "#dc2626"}}/>
+                <p>Sair</p>
+            </button>
 
         </nav>
     )

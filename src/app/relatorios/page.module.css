@@ -32,6 +32,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    margin-bottom: 24px;
 
     .reportTypes{
         background-color: #fff;
@@ -77,10 +78,236 @@
 
     }
 
-    .reportTypes:last-child{
-        grid-column: 1/ -1;
+}
+
+.reportTypesAtivo {
+    border: 1.5px solid #2d7a3a !important;
+    background: #f0fdf4 !important;
+}
+
+.carregando {
+    text-align: center;
+    padding: 40px 16px;
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* ── Resultado do relatório ── */
+.resultado {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.resultadoHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+
+    h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+    }
+}
+
+.botoesExportar {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.btnExportar {
+    background: #2d7a3a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btnExportar:hover:not(:disabled) {
+    background: #245f2d;
+}
+
+.btnExportar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btnExportarPdf {
+    background: #fff;
+    color: #b91c1c;
+    border: 1.5px solid #fecaca;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btnExportarPdf:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.btnExportarPdf:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.filtrosRelatorio {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+
+    .campoFiltro {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        input {
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 13px;
+            color: #111827;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2d7a3a;
+            box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.1);
+        }
+    }
+}
+
+.resumoCards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.resumoCard {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 10px;
+    padding: 12px 16px;
+    min-width: 110px;
+}
+
+.resumoValor {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.resumoLabel {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.semDados {
+    text-align: center;
+    padding: 30px 16px;
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+        text-align: left;
+        padding: 10px 12px;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 12px;
     }
 
+    td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f3f4f6;
+        color: #111827;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+}
+
+.tdTruncar {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Barras de categoria ── */
+.barrasLista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.barraItem {
+    display: grid;
+    grid-template-columns: 160px 1fr 40px;
+    align-items: center;
+    gap: 12px;
+}
+
+.barraLabel {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.barraTrilho {
+    height: 10px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.barraPreenchida {
+    height: 100%;
+    background: #2d7a3a;
+    border-radius: 999px;
+}
+
+.barraValor {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    text-align: right;
 }
 
 

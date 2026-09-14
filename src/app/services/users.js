@@ -6,30 +6,30 @@ function getToken() {
     return localStorage.getItem('token') || sessionStorage.getItem('token')
 }
 
-export async function reports() {
-    const resposta = await axios.get(`${BASE_URL}/problem/all`, {
+export async function listarUsuarios() {
+    const resposta = await axios.get(`${BASE_URL}/users`, {
         params: { limit: 9999 },
         headers: { Authorization: `Bearer ${getToken()}` }
     });
     return resposta.data.data;
 }
 
-export async function updateStatus(id, status, payload = {}) {
-    const resposta = await axios.put(`${BASE_URL}/problem/${id}/${encodeURIComponent(status)}`, payload, {
+export async function criarUsuario(payload) {
+    const resposta = await axios.post(`${BASE_URL}/users`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` }
     });
     return resposta.data;
 }
 
-export async function deleteProblem(id) {
-    const resposta = await axios.delete(`${BASE_URL}/problem/${id}`, {
+export async function meuPerfil() {
+    const resposta = await axios.get(`${BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${getToken()}` }
     });
-    return resposta.data;
+    return resposta.data.user;
 }
 
-export async function createProblem(payload) {
-    const resposta = await axios.post(`${BASE_URL}/problem`, payload, {
+export async function atualizarPerfil(payload) {
+    const resposta = await axios.patch(`${BASE_URL}/users/update`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` }
     });
     return resposta.data;

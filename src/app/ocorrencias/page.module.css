@@ -47,33 +47,191 @@
     }
 }
 
-.selects{
-    display: grid;
-        grid-template-columns: repeat(4, 150px);
+.filtrosCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px 18px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
 
-    gap: 10px;
+.filtrosHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
 
-    .buttonRemoveFilters{
-        width: 150px;
-        background-color: #fff;
-        border: 1px solid rgba(128, 128, 128, 0.507);
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 13px;
+.filtrosTituloWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-    }
+.filtrosIcone {
+    font-size: 14px;
+    line-height: 1;
+}
 
-    .buttonRemoveFilters:hover{
-        border: 1px solid #2d7a3a;
-        border-radius: 8px;
-        cursor: pointer;
+.filtrosTitulo {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.1px;
+}
 
-        font-weight: bold;
-        color: #2d7a3a;
-        font-size: 13px;
+.filtrosBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #2d7a3a;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+}
 
-    }
+.buttonRemoveFilters{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    color: #374151;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.buttonRemoveFilters:hover:not(:disabled){
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+
+.buttonRemoveFilters:disabled{
+    color: #d1d5db;
+    border-color: #f3f4f6;
+    background: #fafafa;
+    cursor: not-allowed;
+}
+
+/* Grade de campos */
+.filtrosGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.campoFiltro {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filtroLabel {
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.filtroSelect {
+    height: 34px;
+    min-width: 160px;
+    padding: 0 32px 0 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    background-size: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #111827;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filtroSelect:hover {
+    border-color: #9ca3af;
+    background-color: #fff;
+}
+
+.filtroSelect:focus {
+    outline: none;
+    border-color: #2d7a3a;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 122, 58, 0.12);
+}
+
+.periodoStackNovo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.periodoLinha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    min-width: 180px;
+    padding: 0 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.periodoLinha:hover {
+    border-color: #9ca3af;
+    background: #fff;
+}
+
+.periodoLinha:focus-within {
+    border-color: #2d7a3a;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 122, 58, 0.12);
+}
+
+.periodoTag {
+    flex-shrink: 0;
+    width: 22px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.filtroDateInput {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #111827;
 }
 
 /* Layout tabela + painel lado a lado */
@@ -86,6 +244,63 @@
 .tableArea {
     flex: 1;
     min-width: 0;
+}
+
+/* ── Barra de seleção em lote ── */
+.barraSelecao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.barraSelecaoTexto {
+    font-size: 13px;
+    font-weight: 600;
+    color: #166534;
+}
+
+.barraSelecaoAcoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btnCancelarSelecao {
+    background: none;
+    border: none;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 10px;
+}
+
+.btnCancelarSelecao:hover {
+    color: #111827;
+    text-decoration: underline;
+}
+
+.btnExcluirLote {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btnExcluirLote:hover {
+    background: #b91c1c;
 }
 
 /* Painel de detalhes */
@@ -256,6 +471,85 @@
     border-radius: 6px;
     object-fit: cover;
     border: 1px solid #e5e7eb;
+}
+
+/* Modal de confirmação de exclusão */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modalCard {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 380px;
+    max-width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    p {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+}
+
+.modalErro {
+    color: #dc2626 !important;
+    font-weight: 600;
+}
+
+.modalAcoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modalAcoes button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.modalAcoes button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.modalCancelarBtn {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.modalCancelarBtn:hover:not(:disabled) {
+    border-color: #9ca3af;
+}
+
+.modalExcluirBtn {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+}
+
+.modalExcluirBtn:hover:not(:disabled) {
+    background: #b91c1c;
 }
 
 

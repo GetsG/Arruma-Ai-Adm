@@ -37,6 +37,57 @@
     }
 }
 
+/* ABAS DE FILTRO */
+.abas {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.aba {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.aba:hover {
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.abaAtiva {
+    background: #fff;
+    font-weight: 700;
+}
+
+.abaDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.abaBadge {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+}
+
 /* LAYOUT */
 .contentArea {
     display: flex;
@@ -56,53 +107,6 @@
     border-radius: 10px;
     border: 1px solid #e5e7eb;
     background: #fff;
-}
-
-.tableWrapperAtribuidas {
-    margin-top: 24px;
-}
-
-/* SECTION HEADER */
-.sectionHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 16px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.dotPendente { background: #f97316; }
-.dotAtribuida { background: #2d7a3a; }
-.dotConcluida { background: #1D4ED8; }
-
-.sectionTitulo {
-    font-size: 15px;
-    font-weight: 600;
-    color: #111827;
-}
-
-.badge {
-    background: #f97316;
-    color: #fff;
-    border-radius: 999px;
-    padding: 1px 9px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badgeGreen {
-    background: #2d7a3a;
-}
-
-.badgeBlue {
-    background: #1D4ED8;
 }
 
 /* TABLE */
@@ -157,13 +161,6 @@
     padding-left: 16px !important;
 }
 
-.osId {
-    font-size: 13px;
-    font-weight: 600;
-    color: #374151;
-    font-family: monospace;
-}
-
 .protocolo {
     font-weight: 600;
     color: #374151;
@@ -174,6 +171,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.carregando {
+    text-align: center;
+    padding: 28px 16px !important;
+    color: #9ca3af;
+    font-size: 13px;
+    white-space: normal !important;
 }
 
 /* AÇÕES */

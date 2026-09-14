@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useRouter } from 'next/navigation'
@@ -59,28 +59,28 @@ function criarIcone(tipo, validado) {
     return L.divIcon({
         className: '',
         html: `
-            <div style="display:flex;flex-direction:column;align-items:center;width:40px;">
+            <div style="display:flex;flex-direction:column;align-items:center;width:26px;">
                 <div style="
-                    width:36px;height:36px;
+                    width:22px;height:22px;
                     background:${bg};
                     border-radius:50%;
                     display:flex;align-items:center;justify-content:center;
-                    font-size:18px;line-height:1;
-                    border:3px solid #fff;
-                    box-shadow:0 3px 8px rgba(0,0,0,0.4);
+                    font-size:11px;line-height:1;
+                    border:2px solid #fff;
+                    box-shadow:0 2px 5px rgba(0,0,0,0.4);
                 ">${emoji}</div>
                 <div style="
                     width:0;height:0;
-                    border-left:7px solid transparent;
-                    border-right:7px solid transparent;
-                    border-top:9px solid ${bg};
+                    border-left:4px solid transparent;
+                    border-right:4px solid transparent;
+                    border-top:6px solid ${bg};
                     margin-top:-1px;
                 "></div>
             </div>
         `,
-        iconSize: [40, 47],
-        iconAnchor: [20, 47],
-        popupAnchor: [0, -50],
+        iconSize: [26, 30],
+        iconAnchor: [13, 30],
+        popupAnchor: [0, -32],
     })
 }
 
@@ -170,11 +170,21 @@ const bordaStyle = {
     fillOpacity: 0.06,
 }
 
+function CapturaClique({ onMapClick }) {
+    useMapEvents({
+        click(e) {
+            onMapClick(e.latlng.lat, e.latlng.lng)
+        },
+    })
+    return null
+}
+
 /**
- * @param {{ pontos: Array<{ lat: number, lng: number, titulo?: string, descricao?: string, tipo?: string }> }} props
+ * @param {{ pontos: Array<{ lat: number, lng: number, titulo?: string, descricao?: string, tipo?: string }>, onMapClick?: (lat: number, lng: number) => void }} props
  * tipo: 'Buraco na via' | 'Iluminação' | 'Saneamento' | 'Segurança' | 'Transporte'
+ * onMapClick: quando informado, clicar no mapa retorna a coordenada clicada (usado para selecionar localização)
  */
-export default function MapGoiania({ pontos = [] }) {
+export default function MapGoiania({ pontos = [], onMapClick }) {
     const router = useRouter()
     const [bordaGoiania, setBordaGoiania] = useState(null)
     const [setores, setSetores] = useState(null)
@@ -227,7 +237,7 @@ out geom;`
             minZoom={GOIANIA_MIN_ZOOM}
             maxBounds={GOIANIA_BOUNDS}
             maxBoundsViscosity={1.0}
-            style={{ width: '100%', height: '100%', borderRadius: '8px' }}
+            style={{ width: '100%', height: '100%', borderRadius: '8px', cursor: onMapClick ? 'crosshair' : '' }}
             scrollWheelZoom={true}
         >
             <TileLayer
@@ -235,7 +245,9 @@ out geom;`
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {bordaGoiania && <GeoJSON data={bordaGoiania} style={bordaStyle} />}
+            {onMapClick && <CapturaClique onMapClick={onMapClick} />}
+
+            {bordaGoiania && <GeoJSON data={bordaGoiania} style={bordaStyle} interactive={false} />}
 
             {setores && (
                 <GeoJSON

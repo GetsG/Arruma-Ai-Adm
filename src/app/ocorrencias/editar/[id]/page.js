@@ -3,16 +3,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Nav from '@/app/components/Nav/Nav'
 import MapGoiania from '@/app/components/Map/MapGoianiaWrapper'
-import { reports, updateStatus } from '@/app/services/reports'
+import { reports, updateStatus, deleteProblem } from '@/app/services/reports'
 import styles from './page.module.css'
-
-const CATEGORIAS = [
-    'Buraco na via',
-    'Iluminação',
-    'Saneamento',
-    'Segurança',
-    'Transporte',
-]
 
 const PRIORIDADE_OPTIONS = [
     { valor: 1, label: 'Baixa' },
@@ -62,9 +54,12 @@ export default function EditarOcorrencia() {
     const [status, setStatus] = useState(1)
     const [prioridade, setPrioridade] = useState('')
     const [categoria, setCategoria] = useState('')
-    const [observacoes, setObservacoes] = useState('')
     const [salvando, setSalvando] = useState(false)
     const [mensagem, setMensagem] = useState(null)
+    const [resumoAberto, setResumoAberto] = useState(true)
+    const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
+    const [excluindo, setExcluindo] = useState(false)
+    const [erroExclusao, setErroExclusao] = useState(null)
 
     useEffect(() => {
         reports()
@@ -73,7 +68,7 @@ export default function EditarOcorrencia() {
                 if (item) {
                     setOcorrencia(item)
                     setStatus(normalizeStatus(item.status))
-                    setPrioridade(normalizePrioridade(item.prioridade))
+                    setPrioridade(normalizePrioridade(item.prioridadeid ?? item.prioridade))
                     setCategoria(item.categoria || '')
                 }
             })
@@ -83,13 +78,33 @@ export default function EditarOcorrencia() {
     async function handleSalvar() {
         setSalvando(true)
         try {
-            await updateStatus(Number(id), status)
+            const payload = {}
+            if (prioridade !== '') payload.prioridadeid = prioridade
+            await updateStatus(Number(id), status, payload)
             setMensagem({ tipo: 'sucesso', texto: 'Alterações salvas com sucesso!' })
         } catch {
             setMensagem({ tipo: 'erro', texto: 'Erro ao salvar. Tente novamente.' })
         } finally {
             setSalvando(false)
             setTimeout(() => setMensagem(null), 4000)
+        }
+    }
+
+    function cancelarExclusao() {
+        if (excluindo) return
+        setConfirmandoExclusao(false)
+        setErroExclusao(null)
+    }
+
+    async function confirmarExclusao() {
+        setExcluindo(true)
+        setErroExclusao(null)
+        try {
+            await deleteProblem(Number(id))
+            router.push('/ocorrencias')
+        } catch (err) {
+            setErroExclusao('Não foi possível excluir a ocorrência. Tente novamente.')
+            setExcluindo(false)
         }
     }
 
@@ -108,6 +123,9 @@ export default function EditarOcorrencia() {
     const pontoMapa = (!isNaN(lat) && !isNaN(lng))
         ? [{ lat, lng, titulo: ocorrencia.endereco?.rua, tipo: ocorrencia.categoria }]
         : []
+    const linkGoogleMaps = (!isNaN(lat) && !isNaN(lng))
+        ? `https://www.google.com/maps?q=${lat},${lng}`
+        : null
 
     const statusLabel = STATUS_OPTIONS.find(s => s.valor === status)?.label || '—'
 
@@ -128,6 +146,9 @@ export default function EditarOcorrencia() {
                     <div className={styles.acoesTopo}>
                         <button className={styles.btnVoltar} onClick={() => router.push('/ocorrencias')}>
                             ← Voltar para lista
+                        </button>
+                        <button className={styles.btnExcluirOcorrencia} onClick={() => setConfirmandoExclusao(true)}>
+                            🗑️ Excluir ocorrência
                         </button>
                         <button className={styles.btnSalvar} onClick={handleSalvar} disabled={salvando}>
                             🔒 {salvando ? 'Salvando...' : 'Salvar alterações'}
@@ -160,16 +181,7 @@ export default function EditarOcorrencia() {
                                 </div>
                                 <div className={styles.campoGroup}>
                                     <label className={styles.label}>Categoria</label>
-                                    <select
-                                        className={styles.select}
-                                        value={categoria}
-                                        onChange={e => setCategoria(e.target.value)}
-                                    >
-                                        <option value="">— Selecione</option>
-                                        {CATEGORIAS.map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
+                                    <input className={styles.inputReadonly} value={categoria || '—'} readOnly />
                                 </div>
                             </div>
                             <div className={styles.campoGroup} style={{ marginTop: 16 }}>
@@ -221,68 +233,23 @@ export default function EditarOcorrencia() {
 
                         {/* Localização */}
                         <div className={styles.card}>
-                            <h3 className={styles.cardTitulo}>📍 Localização</h3>
-                            <div className={styles.gridQuatro}>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>CEP</label>
-                                    <input className={styles.input} placeholder="—" />
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Logradouro</label>
-                                    <input className={styles.input} defaultValue={ocorrencia.endereco?.rua || ''} />
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Número</label>
-                                    <input className={styles.input} placeholder="—" />
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Complemento</label>
-                                    <input className={styles.input} placeholder="—" />
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Bairro</label>
-                                    <select className={styles.select}>
-                                        <option>— Selecione</option>
-                                    </select>
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Cidade</label>
-                                    <select className={styles.select}>
-                                        <option>Goiânia</option>
-                                    </select>
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Estado</label>
-                                    <select className={styles.select}>
-                                        <option>GO</option>
-                                    </select>
-                                </div>
-                                <div className={styles.campoGroup}>
-                                    <label className={styles.label}>Ponto de referência</label>
-                                    <input className={styles.input} defaultValue={ocorrencia.endereco?.ponto_referencia || ''} />
-                                </div>
+                            <div className={styles.localizacaoHeader}>
+                                <h3 className={styles.cardTitulo}>📍 Localização</h3>
+                                {linkGoogleMaps ? (
+                                    <a
+                                        className={styles.linkMaps}
+                                        href={linkGoogleMaps}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Abrir no Google Maps ↗
+                                    </a>
+                                ) : (
+                                    <span className={styles.semLocalizacao}>Localização não informada</span>
+                                )}
                             </div>
-
-                            <div className={styles.mapaSection}>
-                                <button className={styles.ajustarMapa}>📍 Ajustar localização no mapa</button>
-                                <div className={styles.mapaWrapper}>
-                                    <MapGoiania pontos={pontoMapa} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Observações internas */}
-                        <div className={styles.card}>
-                            <h3 className={styles.cardTitulo}>💬 Observações internas</h3>
-                            <div className={styles.textareaWrapper}>
-                                <textarea
-                                    className={styles.textarea}
-                                    value={observacoes}
-                                    onChange={e => setObservacoes(e.target.value.slice(0, 500))}
-                                    placeholder="Adicione observações internas sobre esta ocorrência..."
-                                    rows={5}
-                                />
-                                <span className={styles.charCount}>{observacoes.length} / 500 caracteres</span>
+                            <div className={styles.mapaWrapper}>
+                                <MapGoiania pontos={pontoMapa} />
                             </div>
                         </div>
 
@@ -291,61 +258,84 @@ export default function EditarOcorrencia() {
                     {/* Sidebar direita */}
                     <div className={styles.rightCol}>
                         <div className={styles.sidebar}>
-                            <div className={styles.sidebarHeader}>
+                            <button
+                                type="button"
+                                className={styles.sidebarHeader}
+                                onClick={() => setResumoAberto(prev => !prev)}
+                            >
                                 <span className={styles.sidebarTitulo}>Resumo da ocorrência</span>
-                                <span className={styles.sidebarCollapse}>∧</span>
-                            </div>
+                                <span className={`${styles.sidebarCollapse} ${resumoAberto ? '' : styles.sidebarCollapseFechado}`}>∧</span>
+                            </button>
 
-                            <div className={styles.sidebarSecao}>
-                                <p className={styles.sidebarLabel}>Foto enviada pelo cidadão</p>
-                                <div className={styles.fotoBox}>
-                                    {ocorrencia.imagem?.length > 0
-                                        ? <img src={ocorrencia.imagem[0]} alt="Ocorrência" className={styles.fotoImg} />
-                                        : <div className={styles.fotoPlaceholder} />
-                                    }
-                                    <button className={styles.expandBtn} title="Expandir">⤢</button>
-                                </div>
-                                <button className={styles.btnAlterarFoto}>📷 Alterar foto</button>
-                            </div>
+                            {resumoAberto && (
+                                <>
+                                    {ocorrencia.imagem?.length > 0 && (
+                                        <div className={styles.sidebarSecao}>
+                                            <p className={styles.sidebarLabel}>Foto enviada pelo cidadão</p>
+                                            <div className={styles.fotoBox}>
+                                                <img src={ocorrencia.imagem[0]} alt="Ocorrência" className={styles.fotoImg} />
+                                            </div>
+                                        </div>
+                                    )}
 
-                            <div className={styles.sidebarSecao}>
-                                <p className={styles.sidebarTituloSecao}>Informações do cidadão</p>
-                                <div className={styles.cidadaoGrid}>
-                                    <span className={styles.sidebarLabel}>Nome</span>
-                                    <span className={styles.sidebarValue}>—</span>
-                                    <span className={styles.sidebarLabel}>E-mail</span>
-                                    <span className={styles.sidebarValue}>—</span>
-                                    <span className={styles.sidebarLabel}>Telefone</span>
-                                    <span className={styles.sidebarValue}>—</span>
-                                </div>
-                            </div>
-
-                            <div className={styles.sidebarSecao}>
-                                <p className={styles.sidebarTituloSecao}>Histórico da ocorrência</p>
-                                <div className={styles.historico}>
-                                    <div className={styles.historicoItem}>
-                                        <div className={styles.historicoLinha}>
-                                            <span className={styles.historicoDot} style={{ background: '#2d7a3a' }} />
-                                            <div className={styles.historicoConteudo}>
-                                                <p className={styles.historicoData}>{ocorrencia.data}</p>
-                                                <p className={styles.historicoTexto}>Ocorrência criada pelo cidadão</p>
+                                    <div className={styles.sidebarSecao}>
+                                        <p className={styles.sidebarTituloSecao}>Histórico da ocorrência</p>
+                                        <div className={styles.historico}>
+                                            <div className={styles.historicoItem}>
+                                                <div className={styles.historicoLinha}>
+                                                    <span className={styles.historicoDot} style={{ background: '#2d7a3a' }} />
+                                                    <div className={styles.historicoConteudo}>
+                                                        <p className={styles.historicoData}>{ocorrencia.data}</p>
+                                                        <p className={styles.historicoTexto}>Ocorrência criada pelo cidadão</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={styles.historicoItem}>
+                                                <div className={styles.historicoLinha}>
+                                                    <span className={styles.historicoDot} style={{ background: STATUS_COR[status] || '#6b7280' }} />
+                                                    <div className={styles.historicoConteudo}>
+                                                        <p className={styles.historicoTexto}>Status atual: <strong>{statusLabel}</strong></p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className={styles.historicoItem}>
-                                        <div className={styles.historicoLinha}>
-                                            <span className={styles.historicoDot} style={{ background: STATUS_COR[status] || '#6b7280' }} />
-                                            <div className={styles.historicoConteudo}>
-                                                <p className={styles.historicoTexto}>Status atual: <strong>{statusLabel}</strong></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
                 </div>
+
+                {confirmandoExclusao && (
+                    <div className={styles.modalOverlay} onClick={cancelarExclusao}>
+                        <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+                            <h3>Excluir ocorrência?</h3>
+                            <p>
+                                Essa ação não pode ser desfeita. A ocorrência{' '}
+                                <strong>{protocolo}</strong> — {ocorrencia.descricao} — será
+                                removida permanentemente.
+                            </p>
+                            {erroExclusao && <p className={styles.modalErro}>{erroExclusao}</p>}
+                            <div className={styles.modalAcoes}>
+                                <button
+                                    className={styles.modalCancelarBtn}
+                                    onClick={cancelarExclusao}
+                                    disabled={excluindo}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    className={styles.modalExcluirBtn}
+                                    onClick={confirmarExclusao}
+                                    disabled={excluindo}
+                                >
+                                    {excluindo ? 'Excluindo...' : 'Excluir'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     )

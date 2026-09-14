@@ -3,12 +3,12 @@ import styles from './CardReport.module.css'
 import Loading from '../Loading/Loading'
 
 const statusStyle = {
-    'Em análise':    styles.emAnalise,
-    'Atribuída':     styles.atribuida,
-    'Aguardando OS': styles.aguardandoOS,
-    'Nova':          styles.nova,
-    'Em execução':   styles.emExecucao,
-    'Concluída':     styles.concluida,
+    'Pendente':     styles.pendente,
+    'Em andamento': styles.emAndamento,
+    'Resolvido':    styles.resolvido,
+    'Em análise':   styles.emAnalise,
+    'Atribuído':    styles.atribuido,
+    'Cancelado':    styles.cancelado,
 }
 
 export default function CardReport({
@@ -20,10 +20,15 @@ export default function CardReport({
     onSelect,
     selecionada,
     onEdit,
+    onDelete,
     isLoading = false,
+    selecionados,
+    onToggleSelecionado,
+    onToggleTodos,
 }) {
     const inicio = total > 0 ? (paginaAtual - 1) * 10 + 1 : 0
     const fim = Math.min(paginaAtual * 10, total)
+    const todosSelecionados = ocorrencias.length > 0 && ocorrencias.every(o => selecionados?.has(o.problemaid))
 
     return (
         <div className={styles.tableWrapper}>
@@ -35,7 +40,14 @@ export default function CardReport({
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th className={styles.thCheck}><input type="checkbox" /></th>
+                        <th className={styles.thCheck}>
+                            <input
+                                type="checkbox"
+                                checked={todosSelecionados}
+                                onChange={onToggleTodos}
+                                disabled={ocorrencias.length === 0}
+                            />
+                        </th>
                         <th>Protocolo</th>
                         <th>Descrição</th>
                         <th>Categoria</th>
@@ -60,7 +72,11 @@ export default function CardReport({
                             style={{ cursor: 'pointer' }}
                         >
                             <td className={styles.tdCheck} onClick={e => e.stopPropagation()}>
-                                <input type="checkbox" />
+                                <input
+                                    type="checkbox"
+                                    checked={selecionados?.has(item.problemaid) || false}
+                                    onChange={() => onToggleSelecionado?.(item.problemaid)}
+                                />
                             </td>
                             <td className={styles.protocolo}>{item.protocolo}</td>
                             <td className={styles.tdDescricao}>{item.titulo}</td>
@@ -73,9 +89,20 @@ export default function CardReport({
                             </td>
                             <td>{item.data}</td>
                             <td className={styles.acoes} onClick={e => e.stopPropagation()}>
-                                <button title="Visualizar">👁</button>
+                                <button
+                                    title="Visualizar"
+                                    onClick={() => onSelect?.(selecionada?.protocolo === item.protocolo ? null : item)}
+                                >
+                                    👁
+                                </button>
                                 <button title="Editar" onClick={() => onEdit?.(item.problemaid)}>✏️</button>
-                                <button title="Mais opções">···</button>
+                                <button
+                                    className={styles.btnExcluir}
+                                    title="Excluir"
+                                    onClick={() => onDelete?.(item)}
+                                >
+                                    🗑️
+                                </button>
                             </td>
                         </tr>
                     ))}
