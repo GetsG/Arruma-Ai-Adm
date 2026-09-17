@@ -1,154 +1,261 @@
 /* CONTAINER */
 .container{
-    justify-self: center;
-    
-    height: 100%;
-    width: 20%;
-    min-width: 300px;
+    width: 100%;
+    max-width: 420px;
 }
 
+/* CARD */
+.card{
+    background-color: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
 
-/* CONTAINER LOGO */
+/* CABEÇALHO / LOGO */
 .containerLogo{
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 
-    margin-bottom: 20px;
+    padding: 32px 24px 28px;
+    background: linear-gradient(135deg, #2d7a3a 0%, #1f5c2b 100%);
 
     .logo{
-        width: 100px;
-        height: 100px;
-        padding: 10px;
-        background-color: rgba(255, 255, 255, 0.37);
-        border-radius: 20px;
+        width: 64px;
+        height: 64px;
+        padding: 8px;
+        background-color: rgba(255, 255, 255, 0.18);
+        border-radius: 16px;
     }
 
     h2{
-        font-size: 25px;
-        font-weight: bold;
-        color: white;
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        margin-top: 4px;
     }
 
     p{
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        font-size: 12px;
-        color: white;
-    } 
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.8);
+        letter-spacing: 0.3px;
+    }
 }
 
-
+/* CORPO DO FORMULÁRIO */
 .loginContainer{
-    background-color: #fff;
-    border-radius: 10px;
-    padding: 20px;
+    padding: 28px 28px 32px;
+}
 
-        /* ENTRAR */
+.headerTexto{
+    margin-bottom: 20px;
+
     .title{
-        font-size: 20px;
-        font-family: 'Poppins';
-
-        justify-self: start;
-        margin-bottom: 20px;
+        font-size: 19px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 4px;
     }
 
-    /* FORMULÁRIO */
-    .form{
+    .subtitle{
+        font-size: 12.5px;
+        color: #6b7280;
+    }
+}
+
+/* SELETOR DE TIPO DE ACESSO */
+.tipoAcesso{
+    display: flex;
+    gap: 4px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 22px;
+}
+
+.tipoAcessoBtn{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 8px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tipoAcessoBtn:hover{
+    color: #374151;
+}
+
+.tipoAcessoBtnAtivo,
+.tipoAcessoBtnAtivo:hover{
+    background: #fff;
+    color: #2d7a3a;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* FORMULÁRIO */
+.form{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    /* EMAIL & SENHA */
+    .formGroup{
         display: flex;
         flex-direction: column;
-        gap: 30px;
+        gap: 7px;
 
-        /* EMAIL & SENHA */
-        .formGroup{
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-
-            p{
-                font-size: 12px;
-                font-weight: bold;
-            }
-
-            input{
-                background-color: #D9D9D9;
-
-                border: 1px solid #606160;
-                border-radius: 10px;
-
-                width: 100%;
-                height: 50px;
-                padding: 5px;
-            }
-
-            input:focus{
-                border:1px solid #2d7a3a;
-                box-shadow: 0 0 5px #2d7a3a;
-                outline:none;
-            }}}
+        label{
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #374151;
         }
+    }
 
+    .formOptions{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: -6px;
 
-
-        /* CHECKBOX & ESQUECI MINHA SENHA */
-        .formOptions{
-            display: flex;
-            justify-content: space-between;
-
-            /* CHECKBOX */
-            .checkboxContainer{
-                display: flex;
-                gap: 5px;
-
-                input{
-                    accent-color: gray;
-                }
-
-                label{
-                    font-size: 12px;
-                }}
-            
-                /* ESQUECI A SENHA */
-                .forgotPassword{
-                    color: #2d7a3a;
-                    font-size: 12px;
-                    font-weight: bold;
-                }
-        }
-
-        .submitButton{
-            background-color: #2d7a3a;
-            color: #fff;
-            border-radius: 10px;
-
-            letter-spacing: 2px;
-
-            font-weight: bold;
-
-            padding: 10px;
-            width: 90%;
-            align-self: center;
-            cursor: pointer;
-
+        .checkboxContainer{
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 40px;
+            gap: 6px;
+            font-size: 12.5px;
+            color: #4b5563;
+            cursor: pointer;
+
+            input{
+                accent-color: #2d7a3a;
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+            }
         }
 
-        .submitButton:disabled{
-            opacity: 0.75;
-            cursor: not-allowed;
+        .forgotPassword{
+            color: #2d7a3a;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
         }
+    }
+
+    .submitButton{
+        background-color: #2d7a3a;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+
+        padding: 12px;
+        width: 100%;
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+
+        transition: background-color 0.15s ease;
+    }
+
+    .submitButton:hover:not(:disabled){
+        background-color: #256330;
+    }
+
+    .submitButton:disabled{
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+}
+
+/* INPUTS COM ÍCONE */
+.inputWrap{
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    input{
+        width: 100%;
+        height: 44px;
+        padding: 0 14px 0 38px;
+
+        background-color: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+
+        font-size: 14px;
+        color: #111827;
+    }
+
+    input::placeholder{
+        color: #9ca3af;
+    }
+
+    input:focus{
+        border-color: #2d7a3a;
+        box-shadow: 0 0 0 3px rgba(45, 122, 58, 0.14);
+        outline: none;
+        background-color: #fff;
+    }
+}
+
+.inputWrapErro input{
+    border-color: #dc2626;
+}
+
+.inputIcone{
+    position: absolute;
+    left: 12px;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.botaoOlho{
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.botaoOlho:hover{
+    color: #4b5563;
+}
 
 /* ERROS */
 .erros{
-    color: red;
+    color: #dc2626;
+    font-size: 11.5px;
 }
 
-
-
-
+.errosGeral{
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+}

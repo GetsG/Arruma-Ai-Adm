@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMapEvents } from 'r
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useRouter } from 'next/navigation'
+import styles from './MapGoiania.module.css'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -31,6 +32,16 @@ const ICONES_TIPO = {
     'Saneamento':    { emoji: '💧', bg: '#1D4ED8' },
     'Segurança':     { emoji: '🚨', bg: '#DC2626' },
     'Transporte':    { emoji: '🚌', bg: '#15803D' },
+}
+
+// Mesmas cores usadas em /ocorrencias e no dashboard
+const STATUS_COLOR = {
+    'Pendente':      '#6b7280',
+    'Em andamento':  '#2563eb',
+    'Resolvido':     '#16a34a',
+    'Em análise':    '#7c3aed',
+    'Atribuído':     '#d97706',
+    'Cancelado':     '#dc2626',
 }
 
 // Remove acentos para comparação
@@ -257,23 +268,53 @@ out geom;`
                 />
             )}
 
-            {pontos.map((ponto, index) => (
-                <Marker
-                    key={index}
-                    position={[ponto.lat, ponto.lng]}
-                    icon={criarIcone(ponto.tipo, ponto.validado)}
-                    eventHandlers={{
-                        click: () => ponto.id && router.push(`/ocorrencias/editar/${ponto.id}`)
-                    }}
-                >
-                    {(ponto.titulo || ponto.descricao) && (
-                        <Popup>
-                            {ponto.titulo && <strong>{ponto.titulo}</strong>}
-                            {ponto.descricao && <p style={{ margin: '4px 0 0', fontSize: 12 }}>{ponto.descricao}</p>}
+            {pontos.map((ponto, index) => {
+                const icone = ICONES_TIPO[ponto.tipo]
+                const corStatus = STATUS_COLOR[ponto.status] || STATUS_COLOR['Pendente']
+                return (
+                    <Marker
+                        key={index}
+                        position={[ponto.lat, ponto.lng]}
+                        icon={criarIcone(ponto.tipo, ponto.validado)}
+                    >
+                        <Popup className={styles.popup} minWidth={240} maxWidth={240}>
+                            <div className={styles.card}>
+                                <div className={styles.header}>
+                                    {icone && <span className={styles.tipoIcone}>{icone.emoji}</span>}
+                                    <span className={styles.tipoNome}>{ponto.tipo || 'Ocorrência'}</span>
+                                    <span
+                                        className={styles.validadoBadge}
+                                        style={{
+                                            color: ponto.validado ? '#15803D' : '#DC2626',
+                                            background: ponto.validado ? '#DCFCE7' : '#FEE2E2',
+                                        }}
+                                    >
+                                        {ponto.validado ? 'Validada' : 'Não validada'}
+                                    </span>
+                                </div>
+
+                                {ponto.titulo && <p className={styles.titulo}>{ponto.titulo}</p>}
+                                {ponto.descricao && <p className={styles.descricao}>{ponto.descricao}</p>}
+                                {ponto.status && (
+                                    <span className={styles.statusChip} style={{ color: corStatus }}>
+                                        {ponto.status}
+                                    </span>
+                                )}
+
+                                {ponto.id && (
+                                    <button
+                                        type="button"
+                                        className={styles.botao}
+                                        onClick={() => router.push(`/ocorrencias/editar/${ponto.id}`)}
+                                    >
+                                        Ver mais detalhes →
+                                    </button>
+                                )}
+                            </div>
                         </Popup>
-                    )}
-                </Marker>
-            ))}
+                    </Marker>
+                )
+            })}
         </MapContainer>
     )
 }

@@ -26,7 +26,7 @@ function corAvatar(id) {
 }
 
 export default function Configuracoes() {
-    useAuth()
+    useAuth({ somenteAdmin: true })
 
     const [carregando, setCarregando] = useState(true)
     const [salvando, setSalvando] = useState(false)

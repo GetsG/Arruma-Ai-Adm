@@ -1,23 +1,164 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Nav from '../../components/Nav/Nav'
+import MapGoiania from '@/app/components/Map/MapGoianiaWrapper'
 import { useAuth } from '@/hooks/useAuth'
+import { reports, updateStatus } from '@/app/services/reports'
+import { listarUsuarios } from '@/app/services/users'
+import { criarOrdemServico } from '@/app/services/ordens'
 import styles from './page.module.css'
 
+const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Crítica']
+const STATUS_INICIAIS = ['Atribuída', 'Em execução', 'Aguardando material']
+
 const ETAPAS = [
-    { label: 'OS criada', sub: 'Aguardando atribuição', concluida: true },
-    { label: 'Atribuída à equipe', sub: 'Pendente', concluida: false },
+    { label: 'OS criada', sub: 'Agora', concluida: true },
+    { label: 'Atribuída à equipe', sub: 'Ao salvar', concluida: false },
     { label: 'Em andamento', sub: 'Pendente', concluida: false },
     { label: 'Concluída', sub: 'Pendente', concluida: false },
 ]
 
 export default function CriarOS() {
-    useAuth()
-    const router = useRouter()
+    return (
+        <Suspense fallback={
+            <div className={styles.container}>
+                <Nav tela="ordemdeservico" />
+                <main className={styles.loading}>Carregando ocorrência...</main>
+            </div>
+        }>
+            <CriarOSConteudo />
+        </Suspense>
+    )
+}
 
-    const [descServico, setDescServico] = useState('')
-    const [observacoes, setObservacoes] = useState('')
+function CriarOSConteudo() {
+    useAuth({ somenteAdmin: true })
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const problemaid = searchParams.get('problemaid')
+
+    const [ocorrencia, setOcorrencia] = useState(null)
+    const [prestadores, setPrestadores] = useState([])
+    const [carregando, setCarregando] = useState(true)
+    const [erroCarregamento, setErroCarregamento] = useState(null)
+
+    const [tituloOs, setTituloOs] = useState('')
+    const [prioridade, setPrioridade] = useState('')
+    const [previsaoInicio, setPrevisaoInicio] = useState('')
+    const [prazoEstimado, setPrazoEstimado] = useState('')
+    const [statusInicial, setStatusInicial] = useState('Atribuída')
+    const [descricaoServico, setDescricaoServico] = useState('')
+    const [usuarioId, setUsuarioId] = useState('')
+
+    const [salvando, setSalvando] = useState(false)
+    const [mensagem, setMensagem] = useState(null)
+    const [erros, setErros] = useState({})
+
+    useEffect(() => {
+        if (!problemaid) {
+            setErroCarregamento('Nenhuma ocorrência foi selecionada. Volte para a lista de ocorrências pendentes e escolha uma para atribuir.')
+            setCarregando(false)
+            return
+        }
+
+        setCarregando(true)
+        Promise.all([reports(), listarUsuarios()])
+            .then(([ocorrencias, usuarios]) => {
+                const item = ocorrencias.find(o => o.problemaid === Number(problemaid))
+                if (!item) {
+                    setErroCarregamento('Ocorrência não encontrada.')
+                } else {
+                    setOcorrencia(item)
+                }
+                setPrestadores(usuarios.filter(u => u.tipo === 'prestador'))
+            })
+            .catch(() => setErroCarregamento('Não foi possível carregar os dados da ocorrência.'))
+            .finally(() => setCarregando(false))
+    }, [problemaid])
+
+    function limparErro(campo) {
+        setErros(prev => ({ ...prev, [campo]: undefined }))
+    }
+
+    function validar() {
+        const novosErros = {}
+        if (!tituloOs.trim()) novosErros.tituloOs = 'Informe o título da OS.'
+        if (!prioridade) novosErros.prioridade = 'Selecione a prioridade.'
+        if (!statusInicial) novosErros.statusInicial = 'Selecione o status inicial.'
+        if (!descricaoServico.trim()) novosErros.descricaoServico = 'Descreva o serviço a ser executado.'
+        if (!usuarioId) novosErros.usuarioId = 'Selecione o prestador responsável.'
+        if (!previsaoInicio) novosErros.previsaoInicio = 'Informe a previsão de início.'
+        setErros(novosErros)
+        return Object.keys(novosErros).length === 0
+    }
+
+    async function handleCriar() {
+        setMensagem(null)
+        if (!validar()) {
+            setMensagem({ tipo: 'erro', texto: 'Preencha os campos obrigatórios antes de criar a OS.' })
+            return
+        }
+
+        setSalvando(true)
+        try {
+            await criarOrdemServico({
+                prioridade,
+                titulo_os: tituloOs.trim(),
+                usuarioid: Number(usuarioId),
+                problemaid: Number(problemaid),
+                previsao_inicio: new Date(previsaoInicio).toISOString(),
+                prazo_estimado: prazoEstimado.trim(),
+                status_inicial: statusInicial,
+                descricao_servico: descricaoServico.trim(),
+            })
+
+            // Reflete a atribuição na ocorrência de origem (5 = Atribuído)
+            await updateStatus(Number(problemaid), 5, { observacao: 'Ordem de serviço criada e atribuída automaticamente.' }).catch(err => {
+                console.error('Erro ao atualizar status da ocorrência:', err)
+            })
+
+            router.push('/ordens')
+        } catch (err) {
+            const motivo = err.response?.data?.message || err.response?.data?.error
+            setMensagem({
+                tipo: 'erro',
+                texto: motivo ? `Erro ao criar ordem de serviço: ${motivo}` : 'Erro ao criar ordem de serviço. Verifique os dados e tente novamente.',
+            })
+        } finally {
+            setSalvando(false)
+        }
+    }
+
+    if (carregando) {
+        return (
+            <div className={styles.container}>
+                <Nav tela="ordemdeservico" />
+                <main className={styles.loading}>Carregando ocorrência...</main>
+            </div>
+        )
+    }
+
+    if (erroCarregamento) {
+        return (
+            <div className={styles.container}>
+                <Nav tela="ordemdeservico" />
+                <main>
+                    <div className={`${styles.mensagem} ${styles.erro}`}>{erroCarregamento}</div>
+                    <button className={styles.btnCancelar} onClick={() => router.push('/ordens')}>
+                        ← Voltar para Ordens de Serviço
+                    </button>
+                </main>
+            </div>
+        )
+    }
+
+    const protocolo = `#${String(ocorrencia.problemaid).padStart(4, '0')}`
+    const lat = parseFloat(ocorrencia.endereco?.latitude)
+    const lng = parseFloat(ocorrencia.endereco?.longitude)
+    const pontoMapa = (!isNaN(lat) && !isNaN(lng))
+        ? [{ lat, lng, titulo: ocorrencia.endereco?.rua, tipo: ocorrencia.categoria }]
+        : []
 
     return (
         <div className={styles.container}>
@@ -37,11 +178,17 @@ export default function CriarOS() {
                         <button className={styles.btnCancelar} onClick={() => router.push('/ordens')}>
                             × Cancelar
                         </button>
-                        <button className={styles.btnCriar}>
-                            + Criar OS
+                        <button className={styles.btnCriar} onClick={handleCriar} disabled={salvando}>
+                            + {salvando ? 'Criando...' : 'Criar OS'}
                         </button>
                     </div>
                 </div>
+
+                {mensagem && (
+                    <div className={`${styles.mensagem} ${styles[mensagem.tipo]}`}>
+                        {mensagem.texto}
+                    </div>
+                )}
 
                 <div className={styles.contentArea}>
 
@@ -57,19 +204,19 @@ export default function CriarOS() {
                             <div className={styles.gridQuatro}>
                                 <div className={styles.campo}>
                                     <label>Protocolo da ocorrência</label>
-                                    <input className={styles.inputReadonly} value="#2025-00421" readOnly />
+                                    <input className={styles.inputReadonly} value={protocolo} readOnly />
                                 </div>
                                 <div className={styles.campo}>
                                     <label>Data/Hora da ocorrência</label>
-                                    <input className={styles.inputReadonly} value="13/05/2025 10:45" readOnly />
+                                    <input className={styles.inputReadonly} value={ocorrencia.data || '—'} readOnly />
                                 </div>
                                 <div className={styles.campo}>
                                     <label>Categoria</label>
-                                    <input className={styles.inputReadonly} value="Buraco em via" readOnly />
+                                    <input className={styles.inputReadonly} value={ocorrencia.categoria || '—'} readOnly />
                                 </div>
                                 <div className={styles.campo}>
-                                    <label>Subcategoria</label>
-                                    <input className={styles.inputReadonly} value="Asfalto" readOnly />
+                                    <label>Endereço</label>
+                                    <input className={styles.inputReadonly} value={ocorrencia.endereco?.rua || '—'} readOnly />
                                 </div>
                             </div>
                             <div className={styles.gridDoisDesc}>
@@ -77,7 +224,7 @@ export default function CriarOS() {
                                     <label>Descrição da ocorrência</label>
                                     <textarea
                                         className={`${styles.textarea} ${styles.textareaReadonly}`}
-                                        defaultValue="Grande buraco na via causando risco aos motoristas e pedestres."
+                                        value={ocorrencia.descricao || ''}
                                         rows={4}
                                         readOnly
                                     />
@@ -85,11 +232,19 @@ export default function CriarOS() {
                                 <div className={styles.campo}>
                                     <label>Foto enviada pelo cidadão</label>
                                     <div className={styles.fotoBox}>
-                                        <div className={styles.fotoPlaceholder} />
-                                        <button className={styles.verFoto}>👁 Ver foto</button>
+                                        {ocorrencia.imagem?.length > 0 ? (
+                                            <img src={ocorrencia.imagem[0]} alt="Ocorrência" className={styles.fotoImg} />
+                                        ) : (
+                                            <div className={styles.fotoPlaceholder} />
+                                        )}
                                     </div>
                                 </div>
                             </div>
+                            {pontoMapa.length > 0 && (
+                                <div className={styles.mapaWrapper}>
+                                    <MapGoiania pontos={pontoMapa} />
+                                </div>
+                            )}
                         </div>
 
                         {/* SEÇÃO 2 */}
@@ -98,129 +253,72 @@ export default function CriarOS() {
                             <div className={styles.gridTres}>
                                 <div className={styles.campo}>
                                     <label>Título da OS <span className={styles.req}>*</span></label>
-                                    <input className={styles.input} placeholder="Ex.: Reparar buraco na via" />
+                                    <input
+                                        className={`${styles.input} ${erros.tituloOs ? styles.inputErro : ''}`}
+                                        placeholder="Ex.: Reparar buraco na via"
+                                        value={tituloOs}
+                                        onChange={e => { setTituloOs(e.target.value); limparErro('tituloOs') }}
+                                    />
+                                    {erros.tituloOs && <span className={styles.erroTexto}>{erros.tituloOs}</span>}
                                 </div>
                                 <div className={styles.campo}>
                                     <label>Prioridade <span className={styles.req}>*</span></label>
-                                    <select className={styles.select}>
+                                    <select
+                                        className={`${styles.select} ${erros.prioridade ? styles.inputErro : ''}`}
+                                        value={prioridade}
+                                        onChange={e => { setPrioridade(e.target.value); limparErro('prioridade') }}
+                                    >
                                         <option value="">Selecione a prioridade</option>
-                                        <option>Baixa</option>
-                                        <option>Moderada</option>
-                                        <option>Alta</option>
-                                        <option>Crítica</option>
+                                        {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
                                     </select>
+                                    {erros.prioridade && <span className={styles.erroTexto}>{erros.prioridade}</span>}
                                 </div>
                                 <div className={styles.campo}>
                                     <label>Prazo estimado</label>
-                                    <input className={styles.input} type="date" placeholder="Selecione uma data" />
+                                    <input
+                                        className={styles.input}
+                                        placeholder="Ex.: 5 dias úteis"
+                                        value={prazoEstimado}
+                                        onChange={e => setPrazoEstimado(e.target.value)}
+                                    />
                                 </div>
                             </div>
                             <div className={styles.gridTres}>
                                 <div className={styles.campo}>
-                                    <label>Tipo de serviço <span className={styles.req}>*</span></label>
-                                    <select className={styles.select}>
-                                        <option value="">Selecione o tipo de serviço</option>
-                                        <option>Manutenção</option>
-                                        <option>Reparo</option>
-                                        <option>Instalação</option>
-                                        <option>Vistoria</option>
-                                    </select>
+                                    <label>Previsão de início <span className={styles.req}>*</span></label>
+                                    <input
+                                        className={`${styles.input} ${erros.previsaoInicio ? styles.inputErro : ''}`}
+                                        type="datetime-local"
+                                        value={previsaoInicio}
+                                        onChange={e => { setPrevisaoInicio(e.target.value); limparErro('previsaoInicio') }}
+                                    />
+                                    {erros.previsaoInicio && <span className={styles.erroTexto}>{erros.previsaoInicio}</span>}
                                 </div>
                                 <div className={styles.campo}>
                                     <label>Status inicial <span className={styles.req}>*</span></label>
-                                    <select className={styles.select}>
-                                        <option value="">Selecione o status</option>
-                                        <option>Pendente</option>
-                                        <option>Em execução</option>
-                                        <option>Aguardando material</option>
+                                    <select
+                                        className={`${styles.select} ${erros.statusInicial ? styles.inputErro : ''}`}
+                                        value={statusInicial}
+                                        onChange={e => { setStatusInicial(e.target.value); limparErro('statusInicial') }}
+                                    >
+                                        {STATUS_INICIAIS.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Risco</label>
-                                    <select className={styles.select}>
-                                        <option value="">Selecione o risco</option>
-                                        <option>Baixo</option>
-                                        <option>Médio</option>
-                                        <option>Alto</option>
-                                    </select>
+                                    {erros.statusInicial && <span className={styles.erroTexto}>{erros.statusInicial}</span>}
                                 </div>
                             </div>
                             <div className={styles.campo}>
                                 <label>Descrição do serviço / Tarefa <span className={styles.req}>*</span></label>
                                 <div className={styles.textareaWrapper}>
                                     <textarea
-                                        className={styles.textarea}
+                                        className={`${styles.textarea} ${erros.descricaoServico ? styles.inputErro : ''}`}
                                         placeholder="Descreva o serviço que deverá ser executado..."
                                         rows={4}
-                                        value={descServico}
-                                        onChange={e => setDescServico(e.target.value.slice(0, 1000))}
+                                        value={descricaoServico}
+                                        onChange={e => { setDescricaoServico(e.target.value.slice(0, 1000)); limparErro('descricaoServico') }}
                                     />
-                                    <span className={styles.charCount}>{descServico.length} / 1000 caracteres</span>
+                                    <span className={styles.charCount}>{descricaoServico.length} / 1000 caracteres</span>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* SEÇÃO 3 */}
-                        <div className={styles.card}>
-                            <h3 className={styles.cardTitulo}>3. Localização da execução</h3>
-                            <div className={styles.gridQuatro}>
-                                <div className={styles.campo}>
-                                    <label>CEP <span className={styles.req}>*</span></label>
-                                    <input className={styles.input} placeholder="Ex.: 74043-010" />
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Endereço <span className={styles.req}>*</span></label>
-                                    <input className={styles.input} placeholder="Ex.: Av. Anhanguera" />
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Número</label>
-                                    <input className={styles.input} placeholder="Ex.: 1234" />
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Complemento</label>
-                                    <input className={styles.input} placeholder="Ex.: Qd. 12, Lt. 5" />
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Bairro <span className={styles.req}>*</span></label>
-                                    <input className={styles.input} placeholder="Ex.: Setor Central" />
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Cidade <span className={styles.req}>*</span></label>
-                                    <select className={styles.select}>
-                                        <option>Goiânia</option>
-                                    </select>
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Estado <span className={styles.req}>*</span></label>
-                                    <select className={styles.select}>
-                                        <option>GO</option>
-                                    </select>
-                                </div>
-                                <div className={styles.campo}>
-                                    <label>Ponto de referência</label>
-                                    <input className={styles.input} placeholder="Ex.: Em frente ao supermercado X" />
-                                </div>
-                            </div>
-                            <div className={styles.mapaContainer}>
-                                <button className={styles.btnAjustarMapa}>📍 Ajustar localização no mapa</button>
-                                <div className={styles.mapaPlaceholder}>
-                                    <div className={styles.mapaPin}>📍</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SEÇÃO 4 */}
-                        <div className={styles.card}>
-                            <h3 className={styles.cardTitulo}>4. Observações internas (opcional)</h3>
-                            <div className={styles.textareaWrapper}>
-                                <textarea
-                                    className={styles.textarea}
-                                    placeholder="Informações adicionais, observações ou instruções internas para a equipe responsável..."
-                                    rows={5}
-                                    value={observacoes}
-                                    onChange={e => setObservacoes(e.target.value.slice(0, 500))}
-                                />
-                                <span className={styles.charCount}>{observacoes.length} / 500 caracteres</span>
+                                {erros.descricaoServico && <span className={styles.erroTexto}>{erros.descricaoServico}</span>}
                             </div>
                         </div>
 
@@ -231,28 +329,26 @@ export default function CriarOS() {
 
                         {/* ATRIBUIÇÃO */}
                         <div className={styles.sideCard}>
-                            <h4 className={styles.sideCardTitulo}>Atribuição da equipe</h4>
+                            <h4 className={styles.sideCardTitulo}>Atribuição</h4>
                             <div className={styles.campo}>
-                                <label>Equipe responsável <span className={styles.req}>*</span></label>
-                                <select className={styles.select}>
-                                    <option value="">Selecione uma equipe</option>
-                                    <option>Equipe 01</option>
-                                    <option>Equipe 02</option>
-                                    <option>Equipe 03</option>
-                                    <option>Equipe 04</option>
+                                <label>Prestador responsável <span className={styles.req}>*</span></label>
+                                <select
+                                    className={`${styles.select} ${erros.usuarioId ? styles.inputErro : ''}`}
+                                    value={usuarioId}
+                                    onChange={e => { setUsuarioId(e.target.value); limparErro('usuarioId') }}
+                                >
+                                    <option value="">Selecione um prestador</option>
+                                    {prestadores.map(p => (
+                                        <option key={p.usuarioid} value={p.usuarioid}>
+                                            {p.nome}{p.cargo ? ` — ${p.cargo}` : ''}
+                                        </option>
+                                    ))}
                                 </select>
+                                {erros.usuarioId && <span className={styles.erroTexto}>{erros.usuarioId}</span>}
+                                {prestadores.length === 0 && (
+                                    <span className={styles.avisoTexto}>Nenhum prestador cadastrado ainda.</span>
+                                )}
                             </div>
-                            <div className={styles.campo}>
-                                <label>Líder da equipe</label>
-                                <select className={styles.select}>
-                                    <option value="">Selecione o líder</option>
-                                </select>
-                            </div>
-                            <div className={styles.campo}>
-                                <label>Previsão de início</label>
-                                <input className={styles.input} type="date" />
-                            </div>
-                            <button className={styles.btnAdicionarEquipe}>+ Adicionar equipe</button>
                         </div>
 
                         {/* LINHA DO TEMPO */}
@@ -273,16 +369,6 @@ export default function CriarOS() {
                                         </div>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-
-                        {/* AÇÕES RÁPIDAS */}
-                        <div className={styles.sideCard}>
-                            <h4 className={styles.sideCardTitulo}>Ações rápidas</h4>
-                            <div className={styles.acoesRapidas}>
-                                <button className={styles.btnAcao}>📄 Salvar rascunho</button>
-                                <button className={styles.btnAcao}>👁 Pré-visualizar OS</button>
-                                <button className={styles.btnCriarDisabled} disabled>✓ Criar OS</button>
                             </div>
                         </div>
 

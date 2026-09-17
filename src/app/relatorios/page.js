@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
+import { BarChart as GraficoBarras } from '@mui/x-charts/BarChart'
 import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
 import Nav from "../components/Nav/Nav"
@@ -30,6 +31,7 @@ const TIPOS_RELATORIO = [
 const COR_VERDE = [45, 122, 58]
 const COR_CINZA_TEXTO = [107, 114, 128]
 const COR_CINZA_CLARO = [249, 250, 251]
+
 
 function parseDataBR(str) {
     if (!str) return null
@@ -100,7 +102,7 @@ function rodapePDF(doc) {
 }
 
 export default function Relatorios() {
-    useAuth()
+    useAuth({ somenteAdmin: true })
 
     const [ocorrencias, setOcorrencias] = useState([])
     const [isLoading, setIsLoading] = useState(true)
@@ -363,17 +365,23 @@ export default function Relatorios() {
                                 {relatorioCategoria.linhas.length === 0 ? (
                                     <p className={styles.semDados}>Nenhuma ocorrência registrada ainda.</p>
                                 ) : (
-                                    <div className={styles.barrasLista}>
+                                    <div className={styles.barItemsList}>
                                         {relatorioCategoria.linhas.map(([categoria, qtd]) => (
-                                            <div key={categoria} className={styles.barraItem}>
-                                                <span className={styles.barraLabel}>{categoria}</span>
-                                                <div className={styles.barraTrilho}>
-                                                    <div
-                                                        className={styles.barraPreenchida}
-                                                        style={{ width: `${(qtd / relatorioCategoria.max) * 100}%` }}
-                                                    />
+                                            <div className={styles.barItemRow} key={categoria}>
+                                                <div className={styles.barItemHead}>
+                                                    <span>{categoria}</span>
+                                                    <b>{qtd}</b>
                                                 </div>
-                                                <span className={styles.barraValor}>{qtd}</span>
+                                                <GraficoBarras
+                                                    layout="horizontal"
+                                                    xAxis={[{ min: 0, max: relatorioCategoria.max, position: 'none' }]}
+                                                    yAxis={[{ scaleType: 'band', data: [''], position: 'none' }]}
+                                                    series={[{ data: [qtd], color: '#2d7a3a' }]}
+                                                    borderRadius={4}
+                                                    height={16}
+                                                    margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                                                    hideLegend
+                                                />
                                             </div>
                                         ))}
                                     </div>

@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Nav from '@/app/components/Nav/Nav'
 import MapGoiania from '@/app/components/Map/MapGoianiaWrapper'
+import { useAuth } from '@/hooks/useAuth'
 import { reports, updateStatus, deleteProblem } from '@/app/services/reports'
 import styles from './page.module.css'
+
+const MOTIVO_BLOQUEIO_EXCLUSAO = 'Possui ordem de serviço vinculada a essa ocorrência.'
 
 const PRIORIDADE_OPTIONS = [
     { valor: 1, label: 'Baixa' },
@@ -49,6 +52,7 @@ function normalizePrioridade(raw) {
 export default function EditarOcorrencia() {
     const { id } = useParams()
     const router = useRouter()
+    useAuth({ somenteAdmin: true })
 
     const [ocorrencia, setOcorrencia] = useState(null)
     const [status, setStatus] = useState(1)
@@ -78,9 +82,9 @@ export default function EditarOcorrencia() {
     async function handleSalvar() {
         setSalvando(true)
         try {
-            const payload = {}
-            if (prioridade !== '') payload.prioridadeid = prioridade
-            await updateStatus(Number(id), status, payload)
+            const extra = {}
+            if (prioridade !== '') extra.prioridadeid = prioridade
+            await updateStatus(Number(id), status, extra)
             setMensagem({ tipo: 'sucesso', texto: 'Alterações salvas com sucesso!' })
         } catch {
             setMensagem({ tipo: 'erro', texto: 'Erro ao salvar. Tente novamente.' })
@@ -147,8 +151,13 @@ export default function EditarOcorrencia() {
                         <button className={styles.btnVoltar} onClick={() => router.push('/ocorrencias')}>
                             ← Voltar para lista
                         </button>
-                        <button className={styles.btnExcluirOcorrencia} onClick={() => setConfirmandoExclusao(true)}>
-                            🗑️ Excluir ocorrência
+                        <button
+                            className={styles.btnExcluirOcorrencia}
+                            onClick={() => status === 1 && setConfirmandoExclusao(true)}
+                            disabled={status !== 1}
+                            title={status !== 1 ? MOTIVO_BLOQUEIO_EXCLUSAO : undefined}
+                        >
+                            {status !== 1 ? '🔒' : '🗑️'} Excluir ocorrência
                         </button>
                         <button className={styles.btnSalvar} onClick={handleSalvar} disabled={salvando}>
                             🔒 {salvando ? 'Salvando...' : 'Salvar alterações'}
@@ -218,15 +227,15 @@ export default function EditarOcorrencia() {
                                 </div>
                                 <div className={styles.campoGroup}>
                                     <label className={styles.label}>Status da ocorrência</label>
-                                    <select
-                                        className={`${styles.select} ${styles.selectStatus}`}
-                                        value={status}
-                                        onChange={e => setStatus(Number(e.target.value))}
+                                    <div
+                                        className={styles.statusReadonly}
+                                        style={{ color: STATUS_COR[status] || '#6b7280', background: `${STATUS_COR[status] || '#6b7280'}18` }}
                                     >
-                                        {STATUS_OPTIONS.map(s => (
-                                            <option key={s.valor} value={s.valor}>{s.label}</option>
-                                        ))}
-                                    </select>
+                                        {statusLabel}
+                                    </div>
+                                    <span className={styles.statusReadonlyAviso}>
+                                        O status muda automaticamente pelo fluxo de ordens de serviço.
+                                    </span>
                                 </div>
                             </div>
                         </div>

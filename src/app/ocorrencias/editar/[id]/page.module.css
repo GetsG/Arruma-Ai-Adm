@@ -108,6 +108,13 @@
     border-color: #fca5a5;
 }
 
+.btnExcluirOcorrencia:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #fff;
+    border-color: #fecaca;
+}
+
 /* ── Modal de confirmação de exclusão ── */
 .modalOverlay {
     position: fixed;
@@ -303,6 +310,25 @@
     background: #f0fdf4;
     color: #166534;
     font-weight: 600;
+}
+
+.statusReadonly {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.statusReadonlyAviso {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #9ca3af;
 }
 
 /* ── Textarea ── */

@@ -3,7 +3,8 @@ import { useState, useMemo, useEffect } from 'react'
 import Nav from "../components/Nav/Nav"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
-import { reports } from "../services/reports"
+import { reports, updateStatus } from "../services/reports"
+import { listarOrdensServico, listarOrdensServicoPrestador, atualizarOrdemServico } from "../services/ordens"
 import styles from "./page.module.css"
 
 const LIMITE = 15
@@ -21,6 +22,34 @@ const ABAS = [
     { chave: 'atribuidas', label: 'Atribuídas', cor: '#2563eb' },
     { chave: 'concluidas', label: 'Concluídas', cor: '#059669' },
 ]
+
+// Status que o prestador pode escolher ao atualizar uma OS
+const STATUS_ATUALIZAVEIS = ['Em execução', 'Aguardando material', 'Concluída']
+
+// statusid da ocorrência (/problem/{id}/status) correspondente a cada status_inicial da OS
+const STATUSID_POR_STATUS = {
+    'atribuida':             5,
+    'em execucao':           2,
+    'aguardando material':   2,
+    'concluida':             3,
+}
+
+function normalizarTexto(str) {
+    return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+}
+
+// "Atribuídas" = OS ativas (atribuída / em execução / aguardando material) e ainda não concluídas
+function estaAtiva(item) {
+    if (item.concluido) return false
+    const s = normalizarTexto(item.status)
+    return s.startsWith('atribu') || s.startsWith('em execu') || s.startsWith('aguardando')
+}
+
+// "Concluídas" = campo concluido = true (com fallback pro texto do status, pra OS antigas sem esse campo)
+function estaConcluida(item) {
+    if (typeof item.concluido === 'boolean') return item.concluido
+    return normalizarTexto(item.status).startsWith('conclu')
+}
 
 function Paginacao({ pagina, total, limite, onChange, sufixo }) {
     const totalPaginas = Math.max(1, Math.ceil(total / limite))
@@ -50,36 +79,86 @@ function Paginacao({ pagina, total, limite, onChange, sufixo }) {
 }
 
 export default function Ordens() {
-    useAuth()
+    const { usuario, carregando } = useAuth()
     const router = useRouter()
+    const ehPrestador = usuario?.tipo === 'prestador'
+    // enquanto o perfil não carrega, trata como se não pudesse ver "pendentes" (evita flash pro prestador)
+    const podeVerPendentes = !carregando && !ehPrestador
 
     const [ocorrencias, setOcorrencias] = useState([])
+    const [ordens, setOrdens] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [selecionada, setSelecionada] = useState(null)
     const [busca, setBusca] = useState('')
     const [abaAtiva, setAbaAtiva] = useState('pendentes')
     const [pagina, setPagina] = useState(1)
 
-    // "Atribuídas" e "Concluídas" ainda não têm uma API de ordem de serviço real por trás.
-    const atribuidas = []
-    const concluidas = []
+    const [novoStatusOS, setNovoStatusOS] = useState('')
+    const [observacaoOS, setObservacaoOS] = useState('')
+    const [salvandoOS, setSalvandoOS] = useState(false)
+    const [mensagemOS, setMensagemOS] = useState(null)
+
+    function mapearOrdens(ordensData) {
+        return ordensData.map(item => ({
+            idordem: item.idordem,
+            protocolo: `#${String(item.problemaid).padStart(4, '0')}`,
+            problemaid: item.problemaid,
+            tituloOs: item.titulo_os,
+            prioridade: item.prioridade,
+            prazoEstimado: item.prazo_estimado,
+            previsaoInicio: item.previsao_inicio,
+            dataCriacao: item.data_criacao,
+            status: item.status_inicial,
+            // A API às vezes não manda "concluido" no GET (mesmo pra OS já concluídas) — nesse caso
+            // deixa undefined pra estaConcluida() cair no fallback pelo texto do status
+            concluido: typeof item.concluido === 'boolean' ? item.concluido : undefined,
+            descricaoServico: item.descricao_servico,
+            observacaoInterna: item.observacao_interna,
+            prestadorNome: item.prestador_nome,
+            problemaDescricao: item.problema_descricao,
+        })).sort((a, b) => b.idordem - a.idordem)
+    }
+
+    function carregarDados() {
+        setIsLoading(true)
+        if (ehPrestador) {
+            return listarOrdensServicoPrestador()
+                .then(ordensData => setOrdens(mapearOrdens(ordensData)))
+                .catch(err => console.error('Erro ao buscar ordens de serviço:', err))
+                .finally(() => setIsLoading(false))
+        }
+        return Promise.all([reports(), listarOrdensServico()])
+            .then(([reportsData, ordensData]) => {
+                setOcorrencias(reportsData.map(item => ({
+                    problemaid: item.problemaid,
+                    protocolo: `#${String(item.problemaid).padStart(4, '0')}`,
+                    titulo: item.descricao,
+                    categoria: item.categoria,
+                    endereco: item.endereco?.rua || '-',
+                    status: item.status,
+                    data: item.data,
+                    imagem: item.imagem || [],
+                })).sort((a, b) => b.problemaid - a.problemaid))
+
+                setOrdens(mapearOrdens(ordensData))
+            })
+            .catch(err => console.error('Erro ao buscar ordens de serviço:', err))
+            .finally(() => setIsLoading(false))
+    }
 
     useEffect(() => {
-        setIsLoading(true)
-        reports()
-            .then(data => setOcorrencias(data.map(item => ({
-                problemaid: item.problemaid,
-                protocolo: `#${String(item.problemaid).padStart(4, '0')}`,
-                titulo: item.descricao,
-                categoria: item.categoria,
-                endereco: item.endereco?.rua || '-',
-                status: item.status,
-                data: item.data,
-                imagem: item.imagem || [],
-            })).sort((a, b) => b.problemaid - a.problemaid)))
-            .catch(err => console.error('Erro ao buscar ocorrências:', err))
-            .finally(() => setIsLoading(false))
-    }, [])
+        if (!usuario) return
+        carregarDados()
+    }, [usuario])
+
+    const abas = podeVerPendentes ? ABAS : ABAS.filter(a => a.chave !== 'pendentes')
+
+    // Nunca deixa "pendentes" ser a aba efetivamente exibida antes de confirmar que dá pra ver (evita flash pro prestador)
+    const abaEfetiva = (abaAtiva === 'pendentes' && !podeVerPendentes) ? 'atribuidas' : abaAtiva
+
+    useEffect(() => {
+        if (!podeVerPendentes) setAbaAtiva(prev => prev === 'pendentes' ? 'atribuidas' : prev)
+    }, [podeVerPendentes])
 
     const pendentes = useMemo(() => {
         const pendentesReais = ocorrencias.filter(o => o.status === 'Pendente')
@@ -93,13 +172,35 @@ export default function Ordens() {
         )
     }, [ocorrencias, busca])
 
+    const atribuidas = useMemo(() => {
+        const reais = ordens.filter(estaAtiva)
+        if (!busca) return reais
+        const b = busca.toLowerCase()
+        return reais.filter(o =>
+            o.protocolo.toLowerCase().includes(b) ||
+            o.tituloOs?.toLowerCase().includes(b) ||
+            o.prestadorNome?.toLowerCase().includes(b)
+        )
+    }, [ordens, busca])
+
+    const concluidas = useMemo(() => {
+        const reais = ordens.filter(estaConcluida)
+        if (!busca) return reais
+        const b = busca.toLowerCase()
+        return reais.filter(o =>
+            o.protocolo.toLowerCase().includes(b) ||
+            o.tituloOs?.toLowerCase().includes(b) ||
+            o.prestadorNome?.toLowerCase().includes(b)
+        )
+    }, [ordens, busca])
+
     const contagens = {
         pendentes: pendentes.length,
         atribuidas: atribuidas.length,
         concluidas: concluidas.length,
     }
 
-    const dadosAba = abaAtiva === 'pendentes' ? pendentes : abaAtiva === 'atribuidas' ? atribuidas : concluidas
+    const dadosAba = abaEfetiva === 'pendentes' ? pendentes : abaEfetiva === 'atribuidas' ? atribuidas : concluidas
     const totalAba = dadosAba.length
     const dadosPagina = dadosAba.slice((pagina - 1) * LIMITE, pagina * LIMITE)
 
@@ -107,13 +208,54 @@ export default function Ordens() {
         setPagina(1)
     }, [abaAtiva, busca])
 
-    function handleSelect(os) {
-        setSelecionada(prev => prev?.problemaid === os.problemaid ? null : os)
+    function identidade(item) {
+        return item.idordem !== undefined ? `os-${item.idordem}` : `oc-${item.problemaid}`
+    }
+
+    function handleSelect(item) {
+        setSelecionada(prev => (prev && identidade(prev) === identidade(item)) ? null : item)
+        setMensagemOS(null)
+        if (item?.idordem !== undefined) {
+            const statusAtual = STATUS_ATUALIZAVEIS.includes(item.status) ? item.status : STATUS_ATUALIZAVEIS[0]
+            setNovoStatusOS(statusAtual)
+            setObservacaoOS(item.observacaoInterna || '')
+        }
     }
 
     function trocarAba(chave) {
         setAbaAtiva(chave)
         setSelecionada(null)
+    }
+
+    async function handleAtualizarOS() {
+        if (!selecionada || !novoStatusOS) return
+        setSalvandoOS(true)
+        setMensagemOS(null)
+        try {
+            const concluido = normalizarTexto(novoStatusOS) === 'concluida'
+            await atualizarOrdemServico(selecionada.idordem, {
+                status_inicial: novoStatusOS,
+                observacao_interna: observacaoOS.trim(),
+                concluido,
+            })
+
+            const statusid = STATUSID_POR_STATUS[normalizarTexto(novoStatusOS)]
+            if (statusid) {
+                await updateStatus(selecionada.problemaid, statusid, { observacao: observacaoOS.trim() }).catch(() => {})
+            }
+
+            setMensagemOS({ tipo: 'sucesso', texto: 'Ordem de serviço atualizada com sucesso!' })
+            setSelecionada(null)
+            carregarDados()
+        } catch (err) {
+            const motivo = err.response?.data?.message || err.response?.data?.error
+            setMensagemOS({
+                tipo: 'erro',
+                texto: motivo ? `Erro ao atualizar a OS: ${motivo}` : 'Erro ao atualizar a ordem de serviço. Tente novamente.',
+            })
+        } finally {
+            setSalvandoOS(false)
+        }
     }
 
     return (
@@ -132,22 +274,33 @@ export default function Ordens() {
 
                 <div className={styles.titleDescription}>
                     <h2>Ordens de Serviço</h2>
-                    <p>Acompanhe e gerencie todas as ordens de serviço cadastradas.</p>
+                    <p>
+                        {ehPrestador
+                            ? 'Acompanhe e atualize as ordens de serviço atribuídas a você.'
+                            : 'Acompanhe e gerencie todas as ordens de serviço cadastradas.'}
+                    </p>
                 </div>
 
+                {mensagemOS && (
+                    <div className={`${styles.mensagem} ${styles[mensagemOS.tipo]}`}>
+                        <span>{mensagemOS.texto}</span>
+                        <button type="button" className={styles.mensagemFechar} onClick={() => setMensagemOS(null)}>✕</button>
+                    </div>
+                )}
+
                 <div className={styles.abas}>
-                    {ABAS.map(aba => (
+                    {abas.map(aba => (
                         <button
                             key={aba.chave}
-                            className={`${styles.aba} ${abaAtiva === aba.chave ? styles.abaAtiva : ''}`}
+                            className={`${styles.aba} ${abaEfetiva === aba.chave ? styles.abaAtiva : ''}`}
                             onClick={() => trocarAba(aba.chave)}
-                            style={abaAtiva === aba.chave ? { color: aba.cor, borderColor: aba.cor } : undefined}
+                            style={abaEfetiva === aba.chave ? { color: aba.cor, borderColor: aba.cor } : undefined}
                         >
                             <span className={styles.abaDot} style={{ background: aba.cor }} />
                             {aba.label}
                             <span
                                 className={styles.abaBadge}
-                                style={abaAtiva === aba.chave ? { background: aba.cor, color: '#fff' } : undefined}
+                                style={abaEfetiva === aba.chave ? { background: aba.cor, color: '#fff' } : undefined}
                             >
                                 {contagens[aba.chave]}
                             </span>
@@ -161,7 +314,7 @@ export default function Ordens() {
                         <div className={styles.tableWrapper}>
                             <table className={styles.table}>
                                 <thead>
-                                    {abaAtiva === 'pendentes' && (
+                                    {abaEfetiva === 'pendentes' && (
                                         <tr>
                                             <th className={styles.thCheck}><input type="checkbox" /></th>
                                             <th>Protocolo</th>
@@ -172,29 +325,20 @@ export default function Ordens() {
                                             <th>Ações</th>
                                         </tr>
                                     )}
-                                    {abaAtiva === 'atribuidas' && (
+                                    {abaEfetiva !== 'pendentes' && (
                                         <tr>
                                             <th className={styles.thCheck}><input type="checkbox" /></th>
                                             <th>Protocolo</th>
-                                            <th>Categoria</th>
-                                            <th>Equipe</th>
+                                            <th>Título da OS</th>
+                                            <th>Prestador</th>
+                                            <th>Prioridade</th>
                                             <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    )}
-                                    {abaAtiva === 'concluidas' && (
-                                        <tr>
-                                            <th className={styles.thCheck}><input type="checkbox" /></th>
-                                            <th>Protocolo</th>
-                                            <th>Categoria</th>
-                                            <th>Equipe</th>
-                                            <th>Dt. conclusão</th>
                                             <th>Ações</th>
                                         </tr>
                                     )}
                                 </thead>
                                 <tbody>
-                                    {abaAtiva === 'pendentes' ? (
+                                    {abaEfetiva === 'pendentes' ? (
                                         isLoading ? (
                                             <tr>
                                                 <td colSpan={7} className={styles.carregando}>Carregando ocorrências...</td>
@@ -207,7 +351,7 @@ export default function Ordens() {
                                             <tr
                                                 key={os.problemaid}
                                                 onClick={() => handleSelect(os)}
-                                                className={selecionada?.problemaid === os.problemaid ? styles.rowSelected : ''}
+                                                className={selecionada && identidade(selecionada) === identidade(os) ? styles.rowSelected : ''}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <td className={styles.tdCheck} onClick={e => e.stopPropagation()}><input type="checkbox" /></td>
@@ -218,17 +362,47 @@ export default function Ordens() {
                                                 <td>{os.data}</td>
                                                 <td className={styles.acoes} onClick={e => e.stopPropagation()}>
                                                     <button title="Visualizar" onClick={() => handleSelect(os)}>👁</button>
-                                                    <button title="Editar" onClick={() => router.push(`/ocorrencias/editar/${os.problemaid}`)}>✏️</button>
                                                 </td>
                                             </tr>
                                         ))
-                                    ) : (
+                                    ) : isLoading ? (
                                         <tr>
-                                            <td colSpan={6} className={styles.carregando}>
-                                                Nenhuma ordem de serviço {abaAtiva === 'atribuidas' ? 'atribuída' : 'concluída'} ainda.
+                                            <td colSpan={7} className={styles.carregando}>Carregando ordens de serviço...</td>
+                                        </tr>
+                                    ) : dadosPagina.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className={styles.carregando}>
+                                                Nenhuma ordem de serviço {abaEfetiva === 'atribuidas' ? 'atribuída' : 'concluída'} ainda.
                                             </td>
                                         </tr>
-                                    )}
+                                    ) : dadosPagina.map(os => (
+                                        <tr
+                                            key={os.idordem}
+                                            onClick={() => handleSelect(os)}
+                                            className={selecionada && identidade(selecionada) === identidade(os) ? styles.rowSelected : ''}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <td className={styles.tdCheck} onClick={e => e.stopPropagation()}><input type="checkbox" /></td>
+                                            <td className={styles.protocolo}>{os.protocolo}</td>
+                                            <td className={styles.tdEndereco}>{os.tituloOs}</td>
+                                            <td className={styles.tdEndereco}>{os.prestadorNome || '—'}</td>
+                                            <td>{os.prioridade || '—'}</td>
+                                            <td>
+                                                <span
+                                                    className={styles.painelStatusChip}
+                                                    style={{
+                                                        color: STATUS_COLOR[os.status] || '#6b7280',
+                                                        background: `${STATUS_COLOR[os.status] || '#6b7280'}18`,
+                                                    }}
+                                                >
+                                                    {os.status}
+                                                </span>
+                                            </td>
+                                            <td className={styles.acoes} onClick={e => e.stopPropagation()}>
+                                                <button title="Visualizar" onClick={() => handleSelect(os)}>👁</button>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                             <Paginacao
@@ -236,24 +410,17 @@ export default function Ordens() {
                                 total={totalAba}
                                 limite={LIMITE}
                                 onChange={setPagina}
-                                sufixo={abaAtiva === 'pendentes' ? 'pendentes' : abaAtiva === 'atribuidas' ? 'atribuídas' : 'concluídas'}
+                                sufixo={abaEfetiva === 'pendentes' ? 'pendentes' : abaEfetiva === 'atribuidas' ? 'atribuídas' : 'concluídas'}
                             />
                         </div>
 
                     </div>
 
                     {/* PAINEL LATERAL */}
-                    {selecionada && (
+                    {selecionada && selecionada.idordem === undefined && (
                         <div className={styles.painel}>
                             <div className={styles.painelHeader}>
                                 <span className={styles.painelTitulo}>Detalhes da ocorrência</span>
-                                <button
-                                    className={styles.painelEditar}
-                                    onClick={() => router.push(`/ocorrencias/editar/${selecionada.problemaid}`)}
-                                    title="Editar"
-                                >
-                                    ✏️
-                                </button>
                             </div>
 
                             <div className={styles.painelSubheader}>
@@ -299,10 +466,114 @@ export default function Ordens() {
                             </div>
 
                             <div className={styles.painelAtribuir}>
-                                <button className={styles.btnAtribuir} onClick={() => router.push('/ordens/criar')}>
+                                <button className={styles.btnAtribuir} onClick={() => router.push(`/ordens/criar?problemaid=${selecionada.problemaid}`)}>
                                     👤 Atribuir OS
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {selecionada && selecionada.idordem !== undefined && (
+                        <div className={styles.painel}>
+                            <div className={styles.painelHeader}>
+                                <span className={styles.painelTitulo}>Detalhes da ordem de serviço</span>
+                                {!ehPrestador && (
+                                    <button
+                                        className={styles.painelEditar}
+                                        onClick={() => router.push(`/ocorrencias/editar/${selecionada.problemaid}`)}
+                                        title="Ver ocorrência de origem"
+                                    >
+                                        🔗
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className={styles.painelSubheader}>
+                                <span className={styles.painelOsId}>OS {selecionada.protocolo}</span>
+                                <span
+                                    className={styles.painelStatusChip}
+                                    style={{
+                                        color: STATUS_COLOR[selecionada.status] || '#6b7280',
+                                        background: `${STATUS_COLOR[selecionada.status] || '#6b7280'}18`,
+                                    }}
+                                >
+                                    {selecionada.status}
+                                </span>
+                            </div>
+
+                            <div className={styles.painelSecao}>
+                                <span className={styles.painelLabel}>Título da OS</span>
+                                <p className={styles.painelDescricao}>{selecionada.tituloOs}</p>
+                            </div>
+
+                            <div className={styles.painelGrid}>
+                                <div className={styles.painelGridItem}>
+                                    <span className={styles.painelLabel}>Prioridade</span>
+                                    <span className={styles.painelValue}>{selecionada.prioridade || '—'}</span>
+                                </div>
+                                <div className={styles.painelGridItem}>
+                                    <span className={styles.painelLabel}>Prazo estimado</span>
+                                    <span className={styles.painelValue}>{selecionada.prazoEstimado || '—'}</span>
+                                </div>
+                                <div className={styles.painelGridItem}>
+                                    <span className={styles.painelLabel}>Previsão de início</span>
+                                    <span className={styles.painelValue}>
+                                        {selecionada.previsaoInicio ? new Date(selecionada.previsaoInicio).toLocaleString('pt-BR') : '—'}
+                                    </span>
+                                </div>
+                                <div className={styles.painelGridItem}>
+                                    <span className={styles.painelLabel}>Criada em</span>
+                                    <span className={styles.painelValue}>
+                                        {selecionada.dataCriacao ? new Date(selecionada.dataCriacao).toLocaleString('pt-BR') : '—'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className={styles.painelSecao}>
+                                <span className={styles.painelLabel}>Prestador responsável</span>
+                                <span className={styles.painelValue}>{selecionada.prestadorNome || '—'}</span>
+                            </div>
+
+                            <div className={styles.painelSecao}>
+                                <span className={styles.painelLabel}>Descrição do serviço</span>
+                                <p className={styles.painelDescricao}>{selecionada.descricaoServico}</p>
+                            </div>
+
+                            {ehPrestador ? (
+                                <div className={styles.painelAtualizarOS}>
+                                    <div className={styles.campoOS}>
+                                        <label>Novo status</label>
+                                        <select
+                                            className={styles.selectOS}
+                                            value={novoStatusOS}
+                                            onChange={e => setNovoStatusOS(e.target.value)}
+                                        >
+                                            {STATUS_ATUALIZAVEIS.map(s => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className={styles.campoOS}>
+                                        <label>Observação</label>
+                                        <textarea
+                                            className={styles.textareaOS}
+                                            rows={3}
+                                            value={observacaoOS}
+                                            onChange={e => setObservacaoOS(e.target.value)}
+                                            placeholder="Detalhes sobre o andamento do serviço..."
+                                        />
+                                    </div>
+                                    <button className={styles.btnAtribuir} onClick={handleAtualizarOS} disabled={salvandoOS}>
+                                        {salvandoOS ? 'Salvando...' : '✓ Atualizar ordem de serviço'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className={styles.painelAtribuir}>
+                                    <button className={styles.btnAtribuir} onClick={() => router.push(`/ocorrencias/editar/${selecionada.problemaid}`)}>
+                                        🔗 Ver ocorrência de origem
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

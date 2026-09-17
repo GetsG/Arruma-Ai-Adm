@@ -14,8 +14,8 @@ export async function reports() {
     return resposta.data.data;
 }
 
-export async function updateStatus(id, status, payload = {}) {
-    const resposta = await axios.put(`${BASE_URL}/problem/${id}/${encodeURIComponent(status)}`, payload, {
+export async function updateStatus(id, statusid, extra = {}) {
+    const resposta = await axios.put(`${BASE_URL}/problem/${id}/status`, { statusid, observacao: '', ...extra }, {
         headers: { Authorization: `Bearer ${getToken()}` }
     });
     return resposta.data;

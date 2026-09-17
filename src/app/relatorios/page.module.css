@@ -267,47 +267,28 @@
     white-space: nowrap;
 }
 
-/* ── Barras de categoria ── */
-.barrasLista {
+.barItemsList{
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
-.barraItem {
-    display: grid;
-    grid-template-columns: 160px 1fr 40px;
-    align-items: center;
-    gap: 12px;
+.barItemRow{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.barraLabel {
+.barItemHead{
+    display: flex;
+    justify-content: space-between;
     font-size: 13px;
     color: #374151;
     font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
-.barraTrilho {
-    height: 10px;
-    background: #f3f4f6;
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.barraPreenchida {
-    height: 100%;
-    background: #2d7a3a;
-    border-radius: 999px;
-}
-
-.barraValor {
-    font-size: 13px;
-    font-weight: 600;
+.barItemHead b{
     color: #111827;
-    text-align: right;
 }
 
 

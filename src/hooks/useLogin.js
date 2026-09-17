@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { loginAdmin } from '@/app/services/auth'
+import { loginAdmin, loginPrestador } from '@/app/services/auth'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
@@ -15,6 +15,7 @@ export function useLogin() {
 
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
+    const [tipoAcesso, setTipoAcesso] = useState('admin')
 
     useEffect(() => {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token')
@@ -28,16 +29,17 @@ export function useLogin() {
     async function onSubmit(data) {
         setIsLoading(true)
         try {
-            const resposta = await loginAdmin(data.email, data.senha)
+            const resposta = tipoAcesso === 'admin'
+                ? await loginAdmin(data.email, data.senha)
+                : await loginPrestador(data.email, data.senha)
             const token = resposta.token
+            const perfil = resposta.user
 
-            if (data.lembrar) {
-                localStorage.setItem('token', token)
-            } else {
-                sessionStorage.setItem('token', token)
-            }
+            const armazenamento = data.lembrar ? localStorage : sessionStorage
+            armazenamento.setItem('token', token)
+            if (perfil) armazenamento.setItem('usuario', JSON.stringify(perfil))
 
-            router.push('/dashboard')
+            router.push(tipoAcesso === 'admin' ? '/dashboard' : '/ordens')
 
         } catch (erro) {
             setError('acesso', { message: 'Email ou senha incorretos' })
@@ -46,5 +48,5 @@ export function useLogin() {
         }
     }
 
-    return { register, handleSubmit, onSubmit, errors, isLoading }
+    return { register, handleSubmit, onSubmit, errors, isLoading, tipoAcesso, setTipoAcesso }
 }

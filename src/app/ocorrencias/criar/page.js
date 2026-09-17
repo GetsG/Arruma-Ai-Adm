@@ -18,7 +18,7 @@ function fileParaBase64(file) {
 }
 
 export default function CriarOcorrencia() {
-    useAuth()
+    useAuth({ somenteAdmin: true })
     const router = useRouter()
 
     const [categoriasLista, setCategoriasLista] = useState([])

@@ -14,8 +14,8 @@ export async function listarUsuarios() {
     return resposta.data.data;
 }
 
-export async function criarUsuario(payload) {
-    const resposta = await axios.post(`${BASE_URL}/users`, payload, {
+export async function criarUsuarioAdmin(payload) {
+    const resposta = await axios.post(`${BASE_URL}/users/admin`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` }
     });
     return resposta.data;

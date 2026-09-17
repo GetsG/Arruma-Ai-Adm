@@ -8,3 +8,12 @@ export async function loginAdmin(email, senha) {
 
     return resposta.data // retorna { token, usuario }
 }
+
+export async function loginPrestador(email, senha) {
+    const resposta = await axios.post('https://arruma-ai-api.onrender.com/sessions', {
+        email,
+        senha,
+    })
+
+    return resposta.data // retorna { token, usuario }
+}

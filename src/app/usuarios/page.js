@@ -35,7 +35,7 @@ function corAvatar(id) {
 }
 
 export default function Usuarios() {
-    useAuth()
+    useAuth({ somenteAdmin: true })
     const router = useRouter()
 
     const [usuarios, setUsuarios] = useState([])

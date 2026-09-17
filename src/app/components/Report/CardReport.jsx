@@ -11,6 +11,17 @@ const statusStyle = {
     'Cancelado':    styles.cancelado,
 }
 
+const MOTIVO_BLOQUEIO_EXCLUSAO = 'Possui ordem de serviço vinculada a essa ocorrência.'
+
+// Compara sem diferenciar acento/maiúscula (a API às vezes devolve os status de formas diferentes)
+function normalizarStatus(status) {
+    return (status || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+}
+
+function ehPendente(status) {
+    return normalizarStatus(status) === 'pendente'
+}
+
 export default function CardReport({
     ocorrencias = [],
     paginaAtual = 1,
@@ -28,7 +39,8 @@ export default function CardReport({
 }) {
     const inicio = total > 0 ? (paginaAtual - 1) * 10 + 1 : 0
     const fim = Math.min(paginaAtual * 10, total)
-    const todosSelecionados = ocorrencias.length > 0 && ocorrencias.every(o => selecionados?.has(o.problemaid))
+    const selecionaveis = ocorrencias.filter(o => ehPendente(o.status))
+    const todosSelecionados = selecionaveis.length > 0 && selecionaveis.every(o => selecionados?.has(o.problemaid))
 
     return (
         <div className={styles.tableWrapper}>
@@ -45,7 +57,7 @@ export default function CardReport({
                                 type="checkbox"
                                 checked={todosSelecionados}
                                 onChange={onToggleTodos}
-                                disabled={ocorrencias.length === 0}
+                                disabled={selecionaveis.length === 0}
                             />
                         </th>
                         <th>Protocolo</th>
@@ -64,7 +76,9 @@ export default function CardReport({
                                 <Loading text="Carregando ocorrências..." />
                             </td>
                         </tr>
-                    ) : ocorrencias.map((item, index) => (
+                    ) : ocorrencias.map((item, index) => {
+                        const bloqueada = !ehPendente(item.status)
+                        return (
                         <tr
                             key={index}
                             className={selecionada?.protocolo === item.protocolo ? styles.rowSelected : ''}
@@ -76,6 +90,8 @@ export default function CardReport({
                                     type="checkbox"
                                     checked={selecionados?.has(item.problemaid) || false}
                                     onChange={() => onToggleSelecionado?.(item.problemaid)}
+                                    disabled={bloqueada}
+                                    title={bloqueada ? MOTIVO_BLOQUEIO_EXCLUSAO : undefined}
                                 />
                             </td>
                             <td className={styles.protocolo}>{item.protocolo}</td>
@@ -83,7 +99,7 @@ export default function CardReport({
                             <td>{item.categoria}</td>
                             <td className={styles.tdEndereco}>{item.endereco}</td>
                             <td>
-                                <span className={`${styles.status} ${statusStyle[item.status] || ''}`}>
+                                <span className={`${styles.status} ${statusStyle[item.status] || (normalizarStatus(item.status) === 'atribuido' ? styles.atribuido : '')}`}>
                                     {item.status}
                                 </span>
                             </td>
@@ -98,14 +114,21 @@ export default function CardReport({
                                 <button title="Editar" onClick={() => onEdit?.(item.problemaid)}>✏️</button>
                                 <button
                                     className={styles.btnExcluir}
-                                    title="Excluir"
-                                    onClick={() => onDelete?.(item)}
+                                    title={bloqueada ? MOTIVO_BLOQUEIO_EXCLUSAO : 'Excluir'}
+                                    onClick={() => !bloqueada && onDelete?.(item)}
+                                    disabled={bloqueada}
                                 >
-                                    🗑️
+                                    {bloqueada ? (
+                                        <span className={styles.iconeBloqueado}>
+                                            🗑️
+                                            <span className={styles.cadeado}>🔒</span>
+                                        </span>
+                                    ) : '🗑️'}
                                 </button>
                             </td>
                         </tr>
-                    ))}
+                        )
+                    })}
                 </tbody>
             </table>
 

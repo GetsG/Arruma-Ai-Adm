@@ -19,9 +19,22 @@ const STATUS_COLOR = {
 
 const STATUS_LISTA = Object.keys(STATUS_COLOR)
 
+// A API às vezes devolve os status sem acento — compara sem diferenciar acento/maiúscula
+function normalizarStatus(status) {
+    return (status || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+}
+
+function ehPendente(status) {
+    return normalizarStatus(status) === 'pendente'
+}
+
+function corStatus(status) {
+    return STATUS_COLOR[status] || (normalizarStatus(status) === 'atribuido' ? STATUS_COLOR['Atribuído'] : '#6b7280')
+}
+
 export default function ocorrencias(){
 
-    useAuth();
+    useAuth({ somenteAdmin: true });
     const router = useRouter();
     const [busca, setBusca] = useState("");
     const [categoria, setCategoria] = useState("todas");
@@ -47,6 +60,8 @@ export default function ocorrencias(){
     }, [paginaAtual, busca, categoria, status, periodoInicio, periodoFim]);
 
     function toggleSelecionado(id) {
+        const item = ocorrencias.find(o => o.problemaid === id);
+        if (!ehPendente(item?.status)) return;
         setSelecionados(prev => {
             const novo = new Set(prev);
             if (novo.has(id)) novo.delete(id);
@@ -56,10 +71,11 @@ export default function ocorrencias(){
     }
 
     function toggleTodos() {
-        const todosSelecionados = ocorrencias.length > 0 && ocorrencias.every(o => selecionados.has(o.problemaid));
+        const selecionaveis = ocorrencias.filter(o => ehPendente(o.status));
+        const todosSelecionados = selecionaveis.length > 0 && selecionaveis.every(o => selecionados.has(o.problemaid));
         setSelecionados(prev => {
             const novo = new Set(prev);
-            ocorrencias.forEach(o => {
+            selecionaveis.forEach(o => {
                 if (todosSelecionados) novo.delete(o.problemaid);
                 else novo.add(o.problemaid);
             });
@@ -113,6 +129,7 @@ export default function ocorrencias(){
     const filtrosAtivos = qtdFiltrosAtivos > 0;
 
     function pedirExclusao(item) {
+        if (!ehPendente(item.status)) return;
         setErroExclusao(null);
         setParaExcluir(item);
     }
@@ -278,7 +295,7 @@ export default function ocorrencias(){
                             <span className={styles.painelProtocolo}>{selecionada.protocolo}</span>
                             <span
                                 className={styles.painelStatusChip}
-                                style={{ color: STATUS_COLOR[selecionada.status] || '#6b7280', background: `${STATUS_COLOR[selecionada.status]}18` || '#f3f4f6' }}
+                                style={{ color: corStatus(selecionada.status), background: `${corStatus(selecionada.status)}18` }}
                             >
                                 {selecionada.status}
                             </span>
@@ -304,11 +321,15 @@ export default function ocorrencias(){
                             </div>
                             <div className={styles.painelGridItem}>
                                 <span className={styles.painelLabel}>Status</span>
-                                <span style={{ fontSize: 13, fontWeight: 500, color: STATUS_COLOR[selecionada.status] || '#6b7280' }}>
+                                <span style={{ fontSize: 13, fontWeight: 500, color: corStatus(selecionada.status) }}>
                                     {selecionada.status}
                                 </span>
                             </div>
-                            <div className={styles.painelGridItem} style={{ gridColumn: '1 / -1' }}>
+                            <div className={styles.painelGridItem}>
+                                <span className={styles.painelLabel}>Prioridade</span>
+                                <span className={styles.painelValue}>{selecionada.prioridade || '—'}</span>
+                            </div>
+                            <div className={styles.painelGridItem}>
                                 <span className={styles.painelLabel}>Data de criação</span>
                                 <span className={styles.painelValue}>{selecionada.data}</span>
                             </div>

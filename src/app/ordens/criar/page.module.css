@@ -3,6 +3,47 @@
     padding: 30px;
 }
 
+.loading {
+    padding: 40px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* ── Mensagem de feedback ── */
+.mensagem {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.sucesso {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.erro {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.inputErro {
+    border-color: #dc2626 !important;
+}
+
+.erroTexto {
+    font-size: 11px;
+    color: #dc2626;
+}
+
+.avisoTexto {
+    font-size: 11px;
+    color: #d97706;
+}
+
 /* TOPO */
 .topBar {
     display: flex;
@@ -268,6 +309,21 @@
     font-weight: 500;
     cursor: pointer;
     color: #374151;
+}
+
+.fotoImg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mapaWrapper {
+    height: 220px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 /* MAPA */

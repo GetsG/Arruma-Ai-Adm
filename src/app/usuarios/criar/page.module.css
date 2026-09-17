@@ -84,6 +84,10 @@
 
 /* ── Mensagem de feedback ── */
 .mensagem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: 12px 16px;
     border-radius: 8px;
     font-size: 13px;
@@ -95,6 +99,22 @@
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #fecaca;
+}
+
+.mensagemFechar {
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.6;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 2px;
+}
+
+.mensagemFechar:hover {
+    opacity: 1;
 }
 
 /* ── Layout principal ── */

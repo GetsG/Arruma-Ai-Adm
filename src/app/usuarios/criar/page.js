@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/app/components/Nav/Nav'
 import { useAuth } from '@/hooks/useAuth'
-import { criarUsuario } from '@/app/services/users'
+import { criarUsuarioAdmin } from '@/app/services/users'
 import styles from './page.module.css'
 
 const TIPOS = [
@@ -61,7 +61,7 @@ function validarCPF(valor) {
 }
 
 export default function NovoUsuario() {
-    useAuth()
+    useAuth({ somenteAdmin: true })
     const router = useRouter()
 
     const [nome, setNome] = useState('')
@@ -96,22 +96,23 @@ export default function NovoUsuario() {
     }
 
     async function handleCadastrar() {
+        setMensagem(null)
         if (!validar()) {
             setMensagem({ tipo: 'erro', texto: 'Preencha os campos obrigatórios antes de cadastrar.' })
-            setTimeout(() => setMensagem(null), 4000)
             return
         }
         setSalvando(true)
         try {
-            await criarUsuario({
+            const payload = {
                 nome: nome.trim(),
                 email: email.trim(),
                 senha,
-                telefone: telefone.trim(),
-                cpf: cpf.trim(),
+                telefone: apenasNumeros(telefone),
+                cpf: apenasNumeros(cpf),
                 tipo,
                 cargo: cargo.trim(),
-            })
+            }
+            await criarUsuarioAdmin(payload)
             router.push('/usuarios')
         } catch (err) {
             const motivo = err.response?.data?.message || err.response?.data?.error
@@ -119,7 +120,6 @@ export default function NovoUsuario() {
                 tipo: 'erro',
                 texto: motivo ? `Erro ao cadastrar usuário: ${motivo}` : 'Erro ao cadastrar usuário. Verifique os dados e tente novamente.',
             })
-            setTimeout(() => setMensagem(null), 6000)
         } finally {
             setSalvando(false)
         }
@@ -150,7 +150,15 @@ export default function NovoUsuario() {
 
                 {mensagem && (
                     <div className={`${styles.mensagem} ${styles[mensagem.tipo]}`}>
-                        {mensagem.texto}
+                        <span>{mensagem.texto}</span>
+                        <button
+                            type="button"
+                            className={styles.mensagemFechar}
+                            onClick={() => setMensagem(null)}
+                            aria-label="Fechar mensagem"
+                        >
+                            ✕
+                        </button>
                     </div>
                 )}
 

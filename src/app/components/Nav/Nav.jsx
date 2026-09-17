@@ -3,6 +3,7 @@ import styles from "./Nav.module.css"
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 import Logo from "../../../../public/Logo/Logo.png"
 
@@ -17,10 +18,16 @@ import LogoutIcon from '@mui/icons-material/Logout';                //Sair
 
 export default function Nav({tela}){
     const router = useRouter()
+    const { usuario, carregando } = useAuth()
+    const ehPrestador = usuario?.tipo === 'prestador'
+    // enquanto o perfil não carrega, não mostra os itens admin-only (evita flash pro prestador)
+    const podeVerAdmin = !carregando && !ehPrestador
 
     function handleSair() {
         localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
         sessionStorage.removeItem('token')
+        sessionStorage.removeItem('usuario')
         router.push('/login')
     }
 
@@ -32,35 +39,45 @@ export default function Nav({tela}){
                 <h2>Arruma Aí</h2>
             </div>
 
-            <a href="/dashboard" className={`${styles.navItem} ${tela === "dashboard" ? styles.navItemSelected : ""}`}>
-                <GridViewIcon sx={{color: tela === "dashboard" ? "#fff" : "#6b7280"}}/>
-                <p>Dashboard</p>
-            </a>
+            {podeVerAdmin && (
+                <a href="/dashboard" className={`${styles.navItem} ${tela === "dashboard" ? styles.navItemSelected : ""}`}>
+                    <GridViewIcon sx={{color: tela === "dashboard" ? "#fff" : "#6b7280"}}/>
+                    <p>Dashboard</p>
+                </a>
+            )}
 
-            <a href="/ocorrencias" className={`${styles.navItem} ${tela === "ocorrencias" ? styles.navItemSelected : ""}`}>
-                <WarningAmberIcon sx={{color: tela === "ocorrencias" ? "#fff" : "#6b7280"}}/>
-                <p>Ocorrências</p>
-            </a>
+            {podeVerAdmin && (
+                <a href="/ocorrencias" className={`${styles.navItem} ${tela === "ocorrencias" ? styles.navItemSelected : ""}`}>
+                    <WarningAmberIcon sx={{color: tela === "ocorrencias" ? "#fff" : "#6b7280"}}/>
+                    <p>Ocorrências</p>
+                </a>
+            )}
 
             <a href="/ordens" className={`${styles.navItem} ${tela === "ordemdeservico" ? styles.navItemSelected : ""}`}>
                 <ReceiptIcon sx={{color: tela === "ordemdeservico" ? "#fff" : "#6b7280"}}/>
                 <p>Ordens de Serviço</p>
             </a>
 
-            <a href="/relatorios" className={`${styles.navItem} ${tela === "relatorios" ? styles.navItemSelected : ""}`}>
-                <BarChartIcon sx={{color: tela === "relatorios" ? "#fff" : "#6b7280"}}/>
-                <p>Relatórios</p>
-            </a>
+            {podeVerAdmin && (
+                <a href="/relatorios" className={`${styles.navItem} ${tela === "relatorios" ? styles.navItemSelected : ""}`}>
+                    <BarChartIcon sx={{color: tela === "relatorios" ? "#fff" : "#6b7280"}}/>
+                    <p>Relatórios</p>
+                </a>
+            )}
 
-            <a href="/usuarios" className={`${styles.navItem} ${tela === "usuarios" ? styles.navItemSelected : ""}`}>
-                <PeopleAltIcon sx={{color: tela === "usuarios" ? "#fff" : "#6b7280"}}/>
-                <p>Usuários</p>
-            </a>
+            {podeVerAdmin && (
+                <a href="/usuarios" className={`${styles.navItem} ${tela === "usuarios" ? styles.navItemSelected : ""}`}>
+                    <PeopleAltIcon sx={{color: tela === "usuarios" ? "#fff" : "#6b7280"}}/>
+                    <p>Usuários</p>
+                </a>
+            )}
 
-            <a href="/configuracoes" className={`${styles.navItem} ${tela === "configuracoes" ? styles.navItemSelected : ""}`}>
-                <SettingsIcon sx={{color: tela === "configuracoes" ? "#fff" : "#6b7280"}}/>
-                <p>Configurações</p>
-            </a>
+            {podeVerAdmin && (
+                <a href="/configuracoes" className={`${styles.navItem} ${tela === "configuracoes" ? styles.navItemSelected : ""}`}>
+                    <SettingsIcon sx={{color: tela === "configuracoes" ? "#fff" : "#6b7280"}}/>
+                    <p>Configurações</p>
+                </a>
+            )}
 
             <button className={styles.navItemSair} onClick={handleSair}>
                 <LogoutIcon sx={{color: "#dc2626"}}/>

@@ -3,6 +3,22 @@ import { reports } from '@/app/services/reports'
 
 const LIMITE = 10
 
+const PRIORIDADE_LABEL = { 1: 'Baixa', 2: 'Média', 3: 'Alta', 4: 'Crítica' }
+
+function normalizarPrioridade(item) {
+    if (PRIORIDADE_LABEL[item.prioridadeid]) return PRIORIDADE_LABEL[item.prioridadeid]
+    if (item.prioridade_label) {
+        const texto = item.prioridade_label.trim()
+        return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase()
+    }
+    return null
+}
+
+// A API às vezes devolve o status sem acento (ex.: "Atribuido") — compara sem diferenciar acento/maiúscula
+function normalizarTexto(str) {
+    return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+}
+
 function parseDataBR(str) {
     if (!str) return null
     const match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
@@ -27,6 +43,7 @@ export function useReport(filtros) {
                 endereco: item.endereco?.rua || '-',
                 ponto_referencia: item.endereco?.ponto_referencia || '',
                 status: item.status,
+                prioridade: normalizarPrioridade(item),
                 data: item.data,
                 fotos: item.imagem || [],
             })).sort((a, b) => b.problemaid - a.problemaid)))
@@ -56,7 +73,7 @@ export function useReport(filtros) {
                 if (!bate) return false
             }
             if (filtros.categoria !== 'todas' && item.categoria !== filtros.categoria) return false
-            if (filtros.status !== 'todas' && item.status !== filtros.status) return false
+            if (filtros.status !== 'todas' && normalizarTexto(item.status) !== normalizarTexto(filtros.status)) return false
             if (inicio || fim) {
                 const dataItem = parseDataBR(item.data)
                 if (!dataItem) return false
