@@ -1,3 +1,4 @@
+// fundo cinza por trás da tela de relatórios
 export default function RelatorioLayout({ children }) {
     return (
         <div style={{ 

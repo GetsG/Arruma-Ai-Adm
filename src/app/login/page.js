@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useLogin } from "@/hooks/useLogin"
 
 import styles from "./page.module.css"
@@ -16,13 +17,16 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import Loading from "../components/Loading/Loading"
 
+// as duas opções de login — cada uma chama um endpoint diferente dentro do useLogin
 const TIPOS_ACESSO = [
     { valor: 'admin', label: 'Administrador', Icone: AdminPanelSettingsIcon },
     { valor: 'prestador', label: 'Prestador', Icone: BuildIcon },
 ]
 
+// tela de login: form + seletor de admin/prestador, a lógica em si fica no useLogin
 export default function Login(){
 
+    const router = useRouter()
     const { register, handleSubmit, onSubmit, errors, isLoading, tipoAcesso, setTipoAcesso } = useLogin()
     const [mostrarSenha, setMostrarSenha] = useState(false)
 
@@ -93,6 +97,7 @@ export default function Login(){
                             {errors.senha && <span className={styles.erros}>{errors.senha.message}</span>}
                         </div>
 
+                        {/* erro geral, ex: credencial errada ou tipo de acesso incorreto */}
                         {errors.acesso && <div className={styles.errosGeral}>{errors.acesso.message}</div>}
 
                         {/* FORM OPTIONS */}
@@ -102,7 +107,13 @@ export default function Login(){
                                 Lembrar de mim
                             </label>
 
-                            <span className={styles.forgotPassword}>Esqueci a senha</span>
+                            <button
+                                type="button"
+                                className={styles.forgotPassword}
+                                onClick={() => router.push('/login/esqueci-senha')}
+                            >
+                                Esqueci a senha
+                            </button>
                         </div>
 
                         {/* BOTÃO ACESSAR SISTEMA */}

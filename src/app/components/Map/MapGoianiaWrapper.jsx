@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 
+// Leaflet usa o objeto "window", então o mapa só pode carregar no navegador (ssr: false)
 const MapGoiania = dynamic(() => import('./MapGoiania'), {
     ssr: false,
     loading: () => (

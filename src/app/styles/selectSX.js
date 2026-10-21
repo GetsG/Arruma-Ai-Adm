@@ -1,3 +1,4 @@
+// estilo padrão do Select do MUI, reaproveitado no dashboard
 export const selectSx = {
     width: 150,
     '& .MuiInputLabel-root': { color: 'gray', fontSize: '13px' },

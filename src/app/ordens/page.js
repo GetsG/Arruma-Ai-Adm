@@ -34,6 +34,7 @@ const STATUSID_POR_STATUS = {
     'concluida':             3,
 }
 
+// remove acento e deixa minúsculo, pra comparar status sem depender de como a API formatou o texto
 function normalizarTexto(str) {
     return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
@@ -51,6 +52,7 @@ function estaConcluida(item) {
     return normalizarTexto(item.status).startsWith('conclu')
 }
 
+// paginação simples, reaproveitada nas três abas (pendentes/atribuídas/concluídas)
 function Paginacao({ pagina, total, limite, onChange, sufixo }) {
     const totalPaginas = Math.max(1, Math.ceil(total / limite))
     const inicio = total > 0 ? (pagina - 1) * limite + 1 : 0
@@ -78,6 +80,8 @@ function Paginacao({ pagina, total, limite, onChange, sufixo }) {
     )
 }
 
+// tela de ordens de serviço — conteúdo muda bastante conforme o papel do usuário:
+// admin vê as 3 abas e cria OS; prestador só vê e atualiza as próprias OS
 export default function Ordens() {
     const { usuario, carregando } = useAuth()
     const router = useRouter()
@@ -98,6 +102,7 @@ export default function Ordens() {
     const [salvandoOS, setSalvandoOS] = useState(false)
     const [mensagemOS, setMensagemOS] = useState(null)
 
+    // deixa os campos da API (snake_case) no formato que a tela usa
     function mapearOrdens(ordensData) {
         return ordensData.map(item => ({
             idordem: item.idordem,
@@ -119,6 +124,7 @@ export default function Ordens() {
         })).sort((a, b) => b.idordem - a.idordem)
     }
 
+    // busca os dados certos conforme o papel: prestador só as próprias OS, admin tudo
     function carregarDados() {
         setIsLoading(true)
         if (ehPrestador) {
@@ -208,10 +214,12 @@ export default function Ordens() {
         setPagina(1)
     }, [abaAtiva, busca])
 
+    // gera uma chave única pra comparar linha selecionada, já que a lista mistura ocorrência e OS
     function identidade(item) {
         return item.idordem !== undefined ? `os-${item.idordem}` : `oc-${item.problemaid}`
     }
 
+    // seleciona a linha e, se for uma OS, já prepara o formulário de atualização com os valores atuais
     function handleSelect(item) {
         setSelecionada(prev => (prev && identidade(prev) === identidade(item)) ? null : item)
         setMensagemOS(null)
@@ -222,11 +230,13 @@ export default function Ordens() {
         }
     }
 
+    // muda de aba e limpa a seleção, pra não ficar um item de outra aba marcado
     function trocarAba(chave) {
         setAbaAtiva(chave)
         setSelecionada(null)
     }
 
+    // prestador salva a atualização da OS e, se deu certo, já reflete o status na ocorrência de origem
     async function handleAtualizarOS() {
         if (!selecionada || !novoStatusOS) return
         setSalvandoOS(true)
@@ -263,6 +273,7 @@ export default function Ordens() {
             <Nav tela="ordemdeservico" />
             <main>
 
+                {/* Busca por protocolo, categoria, endereço... */}
                 <div className={styles.search}>
                     <input
                         type="search"
@@ -272,6 +283,7 @@ export default function Ordens() {
                     />
                 </div>
 
+                {/* texto muda dependendo se é admin ou prestador */}
                 <div className={styles.titleDescription}>
                     <h2>Ordens de Serviço</h2>
                     <p>
@@ -281,6 +293,7 @@ export default function Ordens() {
                     </p>
                 </div>
 
+                {/* some sozinha, só aparece depois de atribuir/atualizar uma OS */}
                 {mensagemOS && (
                     <div className={`${styles.mensagem} ${styles[mensagemOS.tipo]}`}>
                         <span>{mensagemOS.texto}</span>
@@ -288,6 +301,7 @@ export default function Ordens() {
                     </div>
                 )}
 
+                {/* abas: pendentes (ocorrência sem OS ainda), atribuídas e concluídas */}
                 <div className={styles.abas}>
                     {abas.map(aba => (
                         <button
@@ -313,6 +327,7 @@ export default function Ordens() {
 
                         <div className={styles.tableWrapper}>
                             <table className={styles.table}>
+                                {/* colunas mudam: pendentes mostra ocorrência, o resto mostra OS */}
                                 <thead>
                                     {abaEfetiva === 'pendentes' && (
                                         <tr>
@@ -337,6 +352,7 @@ export default function Ordens() {
                                         </tr>
                                     )}
                                 </thead>
+                                {/* mesma lógica: pendentes lista ocorrência, as outras listam OS já criada */}
                                 <tbody>
                                     {abaEfetiva === 'pendentes' ? (
                                         isLoading ? (
@@ -417,6 +433,7 @@ export default function Ordens() {
                     </div>
 
                     {/* PAINEL LATERAL */}
+                    {/* ainda é só ocorrência pendente, sem OS - mostra botão de atribuir */}
                     {selecionada && selecionada.idordem === undefined && (
                         <div className={styles.painel}>
                             <div className={styles.painelHeader}>
@@ -473,6 +490,7 @@ export default function Ordens() {
                         </div>
                     )}
 
+                    {/* já tem OS criada - prestador atualiza status, admin só visualiza */}
                     {selecionada && selecionada.idordem !== undefined && (
                         <div className={styles.painel}>
                             <div className={styles.painelHeader}>
@@ -539,6 +557,7 @@ export default function Ordens() {
                                 <p className={styles.painelDescricao}>{selecionada.descricaoServico}</p>
                             </div>
 
+                            {/* só o prestador responsável pode mudar status/observação da própria OS */}
                             {ehPrestador ? (
                                 <div className={styles.painelAtualizarOS}>
                                     <div className={styles.campoOS}>

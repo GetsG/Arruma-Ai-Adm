@@ -24,14 +24,17 @@ function normalizarStatus(status) {
     return (status || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
 
+// regra de exclusão: só pode excluir/selecionar ocorrência pendente
 function ehPendente(status) {
     return normalizarStatus(status) === 'pendente'
 }
 
+// pega a cor do status, com fallback pro caso de "Atribuido" vir sem acento
 function corStatus(status) {
     return STATUS_COLOR[status] || (normalizarStatus(status) === 'atribuido' ? STATUS_COLOR['Atribuído'] : '#6b7280')
 }
 
+// tela de listagem das ocorrências: filtros, seleção em lote, exclusão e painel de detalhes
 export default function ocorrencias(){
 
     useAuth({ somenteAdmin: true });
@@ -55,10 +58,12 @@ export default function ocorrencias(){
         categoriasDisponiveis, removerOcorrencia,
     } = useReport({ busca, categoria, status, periodoInicio, periodoFim });
 
+    // muda filtro ou página, limpa a seleção pra não arrastar item de outra listagem
     useEffect(() => {
         setSelecionados(new Set());
     }, [paginaAtual, busca, categoria, status, periodoInicio, periodoFim]);
 
+    // marca/desmarca um item (ignora se não for pendente)
     function toggleSelecionado(id) {
         const item = ocorrencias.find(o => o.problemaid === id);
         if (!ehPendente(item?.status)) return;
@@ -70,6 +75,7 @@ export default function ocorrencias(){
         });
     }
 
+    // marca/desmarca todas as pendentes da página (ignora as bloqueadas)
     function toggleTodos() {
         const selecionaveis = ocorrencias.filter(o => ehPendente(o.status));
         const todosSelecionados = selecionaveis.length > 0 && selecionaveis.every(o => selecionados.has(o.problemaid));
@@ -83,16 +89,19 @@ export default function ocorrencias(){
         });
     }
 
+    // limpa a seleção sem excluir nada
     function cancelarSelecao() {
         setSelecionados(new Set());
     }
 
+    // fecha o modal de exclusão em lote
     function cancelarExclusaoLote() {
         if (excluindoLote) return;
         setConfirmandoLote(false);
         setErroExclusaoLote(null);
     }
 
+    // exclui todas as selecionadas uma a uma e mantém na lista só as que falharam
     async function confirmarExclusaoLote() {
         setExcluindoLote(true);
         setErroExclusaoLote(null);
@@ -116,6 +125,7 @@ export default function ocorrencias(){
         setExcluindoLote(false);
     }
 
+    // reseta todos os filtros pro estado inicial
     function limparFiltros() {
         setBusca("");
         setCategoria("todas");
@@ -128,18 +138,21 @@ export default function ocorrencias(){
         .filter(Boolean).length;
     const filtrosAtivos = qtdFiltrosAtivos > 0;
 
+    // abre o modal de confirmação (de novo, só deixa se for pendente)
     function pedirExclusao(item) {
         if (!ehPendente(item.status)) return;
         setErroExclusao(null);
         setParaExcluir(item);
     }
 
+    // fecha o modal sem excluir
     function cancelarExclusao() {
         if (excluindo) return;
         setParaExcluir(null);
         setErroExclusao(null);
     }
 
+    // confirma a exclusão de uma ocorrência só
     async function confirmarExclusao() {
         setExcluindo(true);
         setErroExclusao(null);
@@ -163,6 +176,7 @@ export default function ocorrencias(){
         <Nav tela="ocorrencias"/>
 
         <main>
+            {/* Busca e atalho pra nova ocorrência */}
             <div className={styles.search}>
                 <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por protocolo, título, endereço, bairro ou palavra-chave..."/>
                 <button onClick={() => router.push('/ocorrencias/criar')}>+ Nova Ocorrência</button>
@@ -173,6 +187,7 @@ export default function ocorrencias(){
                 <p>Acompanhe e gerencie todas as ocorrências registradas pelos cidadãos.</p>
             </div>
 
+            {/* Filtros de categoria, status e período */}
             <div className={styles.filtrosCard}>
                 <div className={styles.filtrosHeader}>
                     <div className={styles.filtrosTituloWrap}>
@@ -252,6 +267,7 @@ export default function ocorrencias(){
 
             <div className={styles.contentArea}>
                 <div className={styles.tableArea}>
+                    {/* só aparece quando tem alguma linha marcada pra exclusão em lote */}
                     {selecionados.size > 0 && (
                         <div className={styles.barraSelecao}>
                             <span className={styles.barraSelecaoTexto}>
@@ -284,6 +300,7 @@ export default function ocorrencias(){
                     />
                 </div>
 
+                {/* Painel lateral com os detalhes da ocorrência clicada */}
                 {selecionada && (
                     <div className={styles.painel}>
                         <div className={styles.painelHeader}>
@@ -366,6 +383,7 @@ export default function ocorrencias(){
                 )}
             </div>
 
+            {/* Modal de confirmação pra excluir uma ocorrência só */}
             {paraExcluir && (
                 <div className={styles.modalOverlay} onClick={cancelarExclusao}>
                     <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
@@ -396,6 +414,7 @@ export default function ocorrencias(){
                 </div>
             )}
 
+            {/* Modal de confirmação pra excluir em lote */}
             {confirmandoLote && (
                 <div className={styles.modalOverlay} onClick={cancelarExclusaoLote}>
                     <div className={styles.modalCard} onClick={e => e.stopPropagation()}>

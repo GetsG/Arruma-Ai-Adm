@@ -1,3 +1,4 @@
+// só define o fundo cinza por trás da tela de dashboard
 export default function DashboardLayout({ children }) {
     return (
         <div style={{ 

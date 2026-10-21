@@ -1,3 +1,4 @@
+// fundo com degradê verde, centraliza o card de login na tela
 export default function LoginLayout({ children }) {
     return (
         <div style={{

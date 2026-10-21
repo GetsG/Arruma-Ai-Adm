@@ -22,6 +22,7 @@ const MAPA_CATEGORIAS = {
     'transporte':     'Transporte',
 }
 
+// a categoria vem em texto livre da API — essa função padroniza pro nome que o app usa
 function normalizarCategoria(categoria) {
     if (!categoria) return null
     return MAPA_CATEGORIAS[categoria.toLowerCase()] ?? null
@@ -47,6 +48,7 @@ const TIPO_COLOR = {
     'Transporte':    '#15803D',
 }
 
+// tela inicial: mapa com as ocorrências + cards com estatísticas (gráficos calculados a partir da mesma lista)
 export default function dashboard(){
 
     useAuth({ somenteAdmin: true })
@@ -54,6 +56,7 @@ export default function dashboard(){
     const [ocorrencias, setOcorrencias] = useState([])
     const [loadingMapa, setLoadingMapa] = useState(true)
 
+    // busca as ocorrências uma vez e já normaliza os campos usados no mapa/gráficos
     useEffect(() => {
         setLoadingMapa(true)
         reports()
@@ -74,18 +77,21 @@ export default function dashboard(){
             .finally(() => setLoadingMapa(false))
     }, [])
 
+    // aplica o filtro de tipo escolhido no select; o resto da tela (mapa e cards) deriva dessa lista
     const ocorrenciasFiltradas = useMemo(() => (
         tipoOcorrencia === "todas"
             ? ocorrencias
             : ocorrencias.filter(o => o.tipo === tipoOcorrencia)
     ), [ocorrencias, tipoOcorrencia])
 
+    // só entra no mapa quem tem coordenada válida
     const pontosFiltrados = useMemo(() => (
         ocorrenciasFiltradas.filter(p => p.lat != null && p.lng != null && !isNaN(p.lat) && !isNaN(p.lng))
     ), [ocorrenciasFiltradas])
 
     const total = ocorrenciasFiltradas.length
 
+    // conta quantas ocorrências tem em cada status, pro gráfico de pizza
     const porStatus = useMemo(() => {
         const contagem = {}
         ocorrenciasFiltradas.forEach(o => {
@@ -96,6 +102,7 @@ export default function dashboard(){
             .filter(item => item.qtd > 0)
     }, [ocorrenciasFiltradas])
 
+    // mesma ideia, mas agrupando por categoria, pro gráfico de barras
     const porTipo = useMemo(() => {
         const contagem = {}
         ocorrenciasFiltradas.forEach(o => {
@@ -127,6 +134,7 @@ export default function dashboard(){
                 <p>Visão geral da cidade em tempo real. Gerencia ocorrências, prioridades e equipes com mais eficiência.</p>
             </div>
 
+            {/* filtro de categoria, afeta o mapa e os cards todos */}
             <div className={styles.selects}>
                 <FormControl sx={selectSx}>
                     <InputLabel>Tipo de ocorrência</InputLabel>
@@ -149,6 +157,7 @@ export default function dashboard(){
                             <>
                                 <MapGoiania pontos={pontosFiltrados} />
 
+                                {/* legenda sobreposta no mapa */}
                                 <div className={styles.legenda}>
                                     <div className={styles.legendaGrupo}>
                                         <span className={styles.legendaTitulo}>Áreas</span>
@@ -182,6 +191,7 @@ export default function dashboard(){
                     }
                 </div>
 
+                {/* cards com os números calculados a partir da lista filtrada */}
                 <div className={styles.sidePanel}>
                     <div className={styles.statCard}>
                         <span className={styles.statCardTitle}>Total de ocorrências</span>
@@ -193,6 +203,7 @@ export default function dashboard(){
                         </span>
                     </div>
 
+                    {/* donut com a contagem por status */}
                     <div className={styles.statCard}>
                         <span className={styles.statCardTitle}>Ocorrências por status</span>
                         {total === 0 ? (
@@ -233,6 +244,7 @@ export default function dashboard(){
                         )}
                     </div>
 
+                    {/* barrinha mini por categoria */}
                     <div className={styles.statCard}>
                         <span className={styles.statCardTitle}>Ocorrências por tipo</span>
                         {porTipo.length === 0 ? (
@@ -261,6 +273,7 @@ export default function dashboard(){
                         )}
                     </div>
 
+                    {/* barra empilhada validadas x não validadas */}
                     <div className={styles.statCard}>
                         <span className={styles.statCardTitle}>Validadas vs pendentes</span>
                         <div className={styles.statHeroRow}>

@@ -34,6 +34,7 @@ const STATUS_COR = {
     6: '#dc2626',
 }
 
+// a API manda o status tanto como número quanto como texto (com ou sem acento) — aqui vira sempre um número 1-6
 function normalizeStatus(raw) {
     const num = Number(raw)
     if (!isNaN(num) && num >= 1 && num <= 6) return num
@@ -41,6 +42,7 @@ function normalizeStatus(raw) {
     return map[(raw || '').toLowerCase().trim()] || 1
 }
 
+// mesma ideia, mas pra prioridade (1 a 4)
 function normalizePrioridade(raw) {
     if (raw === null || raw === undefined || raw === '') return ''
     const num = Number(raw)
@@ -49,6 +51,7 @@ function normalizePrioridade(raw) {
     return map[(raw || '').toLowerCase().trim()] ?? ''
 }
 
+// tela de edição: mostra os dados da ocorrência (vindos da listagem geral, filtrados pelo id da URL)
 export default function EditarOcorrencia() {
     const { id } = useParams()
     const router = useRouter()
@@ -65,6 +68,7 @@ export default function EditarOcorrencia() {
     const [excluindo, setExcluindo] = useState(false)
     const [erroExclusao, setErroExclusao] = useState(null)
 
+    // não existe endpoint de "buscar uma só" — busca todas e filtra pelo id da rota
     useEffect(() => {
         reports()
             .then(data => {
@@ -79,6 +83,7 @@ export default function EditarOcorrencia() {
             .catch(err => console.error('Erro:', err))
     }, [id])
 
+    // salva só a prioridade (o status não é editável aqui, muda pelo fluxo de ordem de serviço)
     async function handleSalvar() {
         setSalvando(true)
         try {
@@ -94,12 +99,14 @@ export default function EditarOcorrencia() {
         }
     }
 
+    // fecha o modal de confirmação
     function cancelarExclusao() {
         if (excluindo) return
         setConfirmandoExclusao(false)
         setErroExclusao(null)
     }
 
+    // exclui a ocorrência (botão já vem bloqueado se não for pendente)
     async function confirmarExclusao() {
         setExcluindo(true)
         setErroExclusao(null)
@@ -267,6 +274,7 @@ export default function EditarOcorrencia() {
                     {/* Sidebar direita */}
                     <div className={styles.rightCol}>
                         <div className={styles.sidebar}>
+                            {/* clica no header pra abrir/fechar o resumo */}
                             <button
                                 type="button"
                                 className={styles.sidebarHeader}
@@ -316,6 +324,7 @@ export default function EditarOcorrencia() {
 
                 </div>
 
+                {/* modal de confirmação pra excluir a ocorrência */}
                 {confirmandoExclusao && (
                     <div className={styles.modalOverlay} onClick={cancelarExclusao}>
                         <div className={styles.modalCard} onClick={e => e.stopPropagation()}>

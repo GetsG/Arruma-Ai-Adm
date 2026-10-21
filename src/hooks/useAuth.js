@@ -8,6 +8,7 @@ const ROTA_PRESTADOR = '/ordens'
 // em vez de ler direto no render evita mismatch de hidratação.
 const useLayoutEffectIsomorfico = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
+// lê o perfil salvo no login (fica guardado junto com o token)
 function lerUsuarioCache() {
     try {
         const raw = localStorage.getItem('usuario') || sessionStorage.getItem('usuario')
@@ -17,6 +18,7 @@ function lerUsuarioCache() {
     }
 }
 
+// atualiza o cache no mesmo lugar onde o token está (localStorage ou sessionStorage)
 function salvarUsuarioCache(usuario) {
     try {
         if (localStorage.getItem('token')) localStorage.setItem('usuario', JSON.stringify(usuario))
@@ -24,6 +26,7 @@ function salvarUsuarioCache(usuario) {
     } catch {}
 }
 
+// confere se tem login válido e, se a tela for só pra admin, manda o prestador pra Ordens
 export function useAuth({ somenteAdmin = false } = {}) {
     const router = useRouter()
     const [usuario, setUsuario] = useState(null)

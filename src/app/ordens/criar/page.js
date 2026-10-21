@@ -19,6 +19,7 @@ const ETAPAS = [
     { label: 'Concluída', sub: 'Pendente', concluida: false },
 ]
 
+// useSearchParams precisa estar dentro de um Suspense no Next, por isso a tela é dividida em dois componentes
 export default function CriarOS() {
     return (
         <Suspense fallback={
@@ -32,6 +33,7 @@ export default function CriarOS() {
     )
 }
 
+// formulário de criação da OS, aberto a partir de uma ocorrência pendente (vem pelo ?problemaid= da URL)
 function CriarOSConteudo() {
     useAuth({ somenteAdmin: true })
     const router = useRouter()
@@ -55,6 +57,7 @@ function CriarOSConteudo() {
     const [mensagem, setMensagem] = useState(null)
     const [erros, setErros] = useState({})
 
+    // carrega a ocorrência (pelo id da URL) e a lista de prestadores disponíveis pra atribuir
     useEffect(() => {
         if (!problemaid) {
             setErroCarregamento('Nenhuma ocorrência foi selecionada. Volte para a lista de ocorrências pendentes e escolha uma para atribuir.')
@@ -77,10 +80,12 @@ function CriarOSConteudo() {
             .finally(() => setCarregando(false))
     }, [problemaid])
 
+    // tira a mensagem de erro de um campo assim que o usuário mexe nele
     function limparErro(campo) {
         setErros(prev => ({ ...prev, [campo]: undefined }))
     }
 
+    // confere os campos obrigatórios antes de criar a OS
     function validar() {
         const novosErros = {}
         if (!tituloOs.trim()) novosErros.tituloOs = 'Informe o título da OS.'
@@ -93,6 +98,7 @@ function CriarOSConteudo() {
         return Object.keys(novosErros).length === 0
     }
 
+    // cria a OS e, se der certo, marca a ocorrência como Atribuído
     async function handleCriar() {
         setMensagem(null)
         if (!validar()) {

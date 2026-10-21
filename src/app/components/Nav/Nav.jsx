@@ -16,6 +16,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';          //Usuários
 import SettingsIcon from '@mui/icons-material/Settings';            //Configurações
 import LogoutIcon from '@mui/icons-material/Logout';                //Sair
 
+// menu lateral, usado em todas as telas internas. "tela" diz qual item fica destacado
 export default function Nav({tela}){
     const router = useRouter()
     const { usuario, carregando } = useAuth()
@@ -23,6 +24,7 @@ export default function Nav({tela}){
     // enquanto o perfil não carrega, não mostra os itens admin-only (evita flash pro prestador)
     const podeVerAdmin = !carregando && !ehPrestador
 
+    // limpa a sessão e volta pro login
     function handleSair() {
         localStorage.removeItem('token')
         localStorage.removeItem('usuario')
@@ -34,11 +36,13 @@ export default function Nav({tela}){
     return(
         <nav className={styles.navItems}>
 
+            {/* logo + nome do app no topo do menu */}
             <div className={styles.componentLogo}>
                 <Image className={styles.logo} src={Logo} alt="Logo"/>
                 <h2>Arruma Aí</h2>
             </div>
 
+            {/* itens admin-only ficam escondidos pro prestador */}
             {podeVerAdmin && (
                 <a href="/dashboard" className={`${styles.navItem} ${tela === "dashboard" ? styles.navItemSelected : ""}`}>
                     <GridViewIcon sx={{color: tela === "dashboard" ? "#fff" : "#6b7280"}}/>
@@ -53,6 +57,7 @@ export default function Nav({tela}){
                 </a>
             )}
 
+            {/* OS fica visível pros dois tipos de usuário */}
             <a href="/ordens" className={`${styles.navItem} ${tela === "ordemdeservico" ? styles.navItemSelected : ""}`}>
                 <ReceiptIcon sx={{color: tela === "ordemdeservico" ? "#fff" : "#6b7280"}}/>
                 <p>Ordens de Serviço</p>

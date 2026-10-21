@@ -5,6 +5,7 @@ const LIMITE = 10
 
 const PRIORIDADE_LABEL = { 1: 'Baixa', 2: 'Média', 3: 'Alta', 4: 'Crítica' }
 
+// a API manda prioridadeid (número) ou prioridade_label (texto minúsculo) — aqui vira um rótulo só
 function normalizarPrioridade(item) {
     if (PRIORIDADE_LABEL[item.prioridadeid]) return PRIORIDADE_LABEL[item.prioridadeid]
     if (item.prioridade_label) {
@@ -19,6 +20,7 @@ function normalizarTexto(str) {
     return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
 
+// a data vem como texto "dd/mm/aaaa..." — converte pra Date pra dar pra comparar no filtro de período
 function parseDataBR(str) {
     if (!str) return null
     const match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
@@ -27,11 +29,13 @@ function parseDataBR(str) {
     return new Date(Number(ano), Number(mes) - 1, Number(dia))
 }
 
+// busca as ocorrências, aplica os filtros recebidos e já devolve paginado
 export function useReport(filtros) {
     const [todas, setTodas] = useState([])
     const [paginaAtual, setPaginaAtual] = useState(1)
     const [isLoading, setIsLoading] = useState(true)
 
+    // carrega tudo uma vez só; os filtros depois são aplicados em memória
     useEffect(() => {
         setIsLoading(true)
         reports()
@@ -51,14 +55,17 @@ export function useReport(filtros) {
             .finally(() => setIsLoading(false))
     }, [])
 
+    // toda vez que um filtro muda, volta pra primeira página
     useEffect(() => {
         setPaginaAtual(1)
     }, [filtros.busca, filtros.categoria, filtros.status, filtros.periodoInicio, filtros.periodoFim])
 
+    // lista de categorias únicas, pra popular o select de filtro
     const categoriasDisponiveis = useMemo(() => (
         [...new Set(todas.map(item => item.categoria).filter(Boolean))].sort()
     ), [todas])
 
+    // aplica busca por texto, categoria, status e período sobre a lista completa
     const filtradas = useMemo(() => {
         const inicio = filtros.periodoInicio ? new Date(`${filtros.periodoInicio}T00:00:00`) : null
         const fim = filtros.periodoFim ? new Date(`${filtros.periodoFim}T23:59:59`) : null
@@ -87,6 +94,7 @@ export function useReport(filtros) {
     const totalPaginas = Math.max(1, Math.ceil(filtradas.length / LIMITE))
     const ocorrencias = filtradas.slice((paginaAtual - 1) * LIMITE, paginaAtual * LIMITE)
 
+    // tira a ocorrência da lista local depois de excluir, sem precisar buscar tudo de novo
     function removerOcorrencia(problemaid) {
         setTodas(prev => prev.filter(item => item.problemaid !== problemaid))
     }

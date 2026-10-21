@@ -6,6 +6,7 @@ function getToken() {
     return localStorage.getItem('token') || sessionStorage.getItem('token')
 }
 
+// lista as categorias de ocorrência cadastradas
 export async function categories() {
     const resposta = await axios.get(`${BASE_URL}/category`, {
         headers: { Authorization: `Bearer ${getToken()}` }

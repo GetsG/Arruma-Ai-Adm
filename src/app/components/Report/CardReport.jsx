@@ -18,10 +18,12 @@ function normalizarStatus(status) {
     return (status || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
 
+// só dá pra excluir ocorrência que ainda está pendente
 function ehPendente(status) {
     return normalizarStatus(status) === 'pendente'
 }
 
+// tabela de ocorrências usada na tela de listagem, com seleção em lote e paginação
 export default function CardReport({
     ocorrencias = [],
     paginaAtual = 1,
@@ -49,6 +51,7 @@ export default function CardReport({
                 <span className={styles.listCount}>{total}</span>
             </div>
 
+            {/* checkbox do cabeçalho marca/desmarca só as pendentes, que são as que podem ser excluídas */}
             <table className={styles.table}>
                 <thead>
                     <tr>
@@ -132,6 +135,7 @@ export default function CardReport({
                 </tbody>
             </table>
 
+            {/* paginação */}
             <div className={styles.paginacao}>
                 <span className={styles.paginacaoInfo}>
                     Mostrando {inicio} a {fim} de {total} ocorrências

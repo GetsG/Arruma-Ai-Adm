@@ -1,3 +1,4 @@
+// fundo cinza por trás das telas de ocorrências (lista/criar/editar)
 export default function OcorrenciaLayout({ children }) {
     return (
         <div style={{ 

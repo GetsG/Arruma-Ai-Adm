@@ -8,6 +8,7 @@ import { categories } from '@/app/services/category'
 import { useAuth } from '@/hooks/useAuth'
 import styles from './page.module.css'
 
+// converte o arquivo de imagem pra base64, formato que a API espera no cadastro
 function fileParaBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -17,6 +18,7 @@ function fileParaBase64(file) {
     })
 }
 
+// cadastro manual de ocorrência, usado pelo admin (o cidadão cadastra pelo app)
 export default function CriarOcorrencia() {
     useAuth({ somenteAdmin: true })
     const router = useRouter()
@@ -34,18 +36,21 @@ export default function CriarOcorrencia() {
     const [mensagem, setMensagem] = useState(null)
     const [erros, setErros] = useState({})
 
+    // carrega as categorias pro select
     useEffect(() => {
         categories()
             .then(lista => setCategoriasLista(lista || []))
             .catch(err => console.error('Erro ao buscar categorias:', err))
     }, [])
 
+    // clicou no mapa: usa a coordenada clicada como localização da ocorrência
     function handleMapClick(lat, lng) {
         setLatitude(lat.toFixed(6))
         setLongitude(lng.toFixed(6))
         setErros(prev => ({ ...prev, localizacao: undefined }))
     }
 
+    // pega a localização do navegador (geolocalização) em vez de clicar no mapa
     function usarLocalizacaoAtual() {
         if (!navigator.geolocation) return
         navigator.geolocation.getCurrentPosition(
@@ -61,6 +66,7 @@ export default function CriarOcorrencia() {
         )
     }
 
+    // converte cada arquivo selecionado em base64 e adiciona na lista de imagens
     async function handleImagens(e) {
         const arquivos = Array.from(e.target.files || [])
         if (arquivos.length === 0) return
@@ -74,10 +80,12 @@ export default function CriarOcorrencia() {
         }
     }
 
+    // tira uma imagem da lista antes de enviar
     function removerImagem(index) {
         setImagens(prev => prev.filter((_, i) => i !== index))
     }
 
+    // checa os campos obrigatórios antes de cadastrar
     function validar() {
         const novosErros = {}
         if (!descricao.trim()) novosErros.descricao = 'Informe a descrição da ocorrência.'
@@ -87,6 +95,7 @@ export default function CriarOcorrencia() {
         return Object.keys(novosErros).length === 0
     }
 
+    // valida e envia o cadastro da nova ocorrência
     async function handleCadastrar() {
         if (!validar()) {
             setMensagem({ tipo: 'erro', texto: 'Preencha os campos obrigatórios antes de cadastrar.' })

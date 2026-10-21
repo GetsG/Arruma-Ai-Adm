@@ -33,6 +33,7 @@ const COR_CINZA_TEXTO = [107, 114, 128]
 const COR_CINZA_CLARO = [249, 250, 251]
 
 
+// converte a data em texto "dd/mm/aaaa hh:mm" pra Date, usada no filtro por período
 function parseDataBR(str) {
     if (!str) return null
     const match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/)
@@ -41,6 +42,7 @@ function parseDataBR(str) {
     return new Date(Number(ano), Number(mes) - 1, Number(dia), Number(hora || 0), Number(min || 0))
 }
 
+// monta o arquivo CSV na memória e dispara o download pelo navegador
 function baixarCSV(nomeArquivo, cabecalho, linhas) {
     const escapar = v => `"${String(v ?? '').replace(/"/g, '""')}"`
     const conteudo = [cabecalho, ...linhas].map(linha => linha.map(escapar).join(';')).join('\r\n')
@@ -55,6 +57,7 @@ function baixarCSV(nomeArquivo, cabecalho, linhas) {
     URL.revokeObjectURL(url)
 }
 
+// desenha o topo do PDF: faixa verde com o nome do app e o título do relatório
 function cabecalhoPDF(doc, titulo, subtitulo) {
     const largura = doc.internal.pageSize.getWidth()
 
@@ -86,6 +89,7 @@ function cabecalhoPDF(doc, titulo, subtitulo) {
     }
 }
 
+// desenha o rodapé em todas as páginas do PDF já geradas (precisa rodar depois da tabela, por isso é separado do cabeçalho)
 function rodapePDF(doc) {
     const totalPaginas = doc.internal.getNumberOfPages()
     for (let i = 1; i <= totalPaginas; i++) {
@@ -101,6 +105,7 @@ function rodapePDF(doc) {
     }
 }
 
+// tela de relatórios: dois modelos (por período e por categoria), cada um com export em PDF e CSV
 export default function Relatorios() {
     useAuth({ somenteAdmin: true })
 
@@ -110,6 +115,7 @@ export default function Relatorios() {
     const [periodoInicio, setPeriodoInicio] = useState('')
     const [periodoFim, setPeriodoFim] = useState('')
 
+    // busca todas as ocorrências uma vez; os dois relatórios são calculados em cima dessa mesma lista
     useEffect(() => {
         setIsLoading(true)
         reports()
@@ -154,6 +160,7 @@ export default function Relatorios() {
         return { linhas, max }
     }, [ocorrencias])
 
+    // monta o texto "Período de X até Y" usado no cabeçalho do PDF
     function subtituloPeriodo() {
         if (!periodoInicio && !periodoFim) return 'Todas as ocorrências registradas'
         const de = periodoInicio ? new Date(`${periodoInicio}T00:00:00`).toLocaleDateString('pt-BR') : 'o início'
@@ -161,6 +168,7 @@ export default function Relatorios() {
         return `Período de ${de} até ${ate}`
     }
 
+    // exporta o relatório por período em CSV
     function exportarPeriodoCSV() {
         baixarCSV(
             'ocorrencias-por-periodo.csv',
@@ -169,6 +177,7 @@ export default function Relatorios() {
         )
     }
 
+    // monta o PDF do relatório por período: cabeçalho, resumo por status e a tabela de ocorrências
     function exportarPeriodoPDF() {
         const doc = new jsPDF()
         cabecalhoPDF(doc, 'Relatório de Ocorrências por Período', subtituloPeriodo())
@@ -199,6 +208,7 @@ export default function Relatorios() {
         doc.save('ocorrencias-por-periodo.pdf')
     }
 
+    // exporta o relatório por categoria em CSV
     function exportarCategoriaCSV() {
         baixarCSV(
             'ocorrencias-por-categoria.csv',
@@ -207,6 +217,8 @@ export default function Relatorios() {
         )
     }
 
+    // monta o PDF do relatório por categoria — a barrinha de proporção é desenhada manualmente
+    // célula por célula (jsPDF não tem gráfico pronto, então aproveita o espaço da coluna "Proporção")
     function exportarCategoriaPDF() {
         const doc = new jsPDF()
         const total = relatorioCategoria.linhas.reduce((s, [, q]) => s + q, 0)
@@ -257,6 +269,7 @@ export default function Relatorios() {
 
                 <h3 className={styles.tittleTypesReports}>Tipos de relatório</h3>
 
+                {/* clica num card pra abrir o relatório correspondente */}
                 <div className={styles.containerReport}>
                     {TIPOS_RELATORIO.map(tipo => (
                         <button
@@ -281,6 +294,7 @@ export default function Relatorios() {
                 ) : (
                     <div className={styles.resultado}>
 
+                        {/* relatório por período: filtro de data, resumo e tabela */}
                         {relatorioAtivo === 'periodo' && (
                             <>
                                 <div className={styles.resultadoHeader}>
@@ -295,6 +309,7 @@ export default function Relatorios() {
                                     </div>
                                 </div>
 
+                                {/* intervalo de data pra filtrar o relatório */}
                                 <div className={styles.filtrosRelatorio}>
                                     <div className={styles.campoFiltro}>
                                         <label>De</label>
@@ -306,6 +321,7 @@ export default function Relatorios() {
                                     </div>
                                 </div>
 
+                                {/* total + quantidade por status no período */}
                                 <div className={styles.resumoCards}>
                                     <div className={styles.resumoCard}>
                                         <span className={styles.resumoValor}>{relatorioPeriodo.filtradas.length}</span>
@@ -348,6 +364,7 @@ export default function Relatorios() {
                             </>
                         )}
 
+                        {/* relatório por categoria: lista com barrinha de proporção */}
                         {relatorioAtivo === 'categoria' && (
                             <>
                                 <div className={styles.resultadoHeader}>

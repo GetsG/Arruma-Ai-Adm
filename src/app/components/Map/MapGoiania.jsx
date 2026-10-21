@@ -49,6 +49,7 @@ function normalizar(str) {
     return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
 
+// confere se o nome do setor está na lista dos que têm hospital perto
 function ehHospital(nome) {
     const n = normalizar(nome)
     return SETORES_HOSPITAIS.some(s => normalizar(s) === n)
@@ -64,6 +65,7 @@ const hospitalStyle = {
     lineCap: 'round',
 }
 
+// monta o ícone do marcador: emoji conforme a categoria, cor conforme validado ou não
 function criarIcone(tipo, validado) {
     const { emoji } = ICONES_TIPO[tipo] || { emoji: '📍' }
     const bg = validado === true ? '#15803D' : '#DC2626'
@@ -95,6 +97,7 @@ function criarIcone(tipo, validado) {
     })
 }
 
+// compara duas coordenadas com uma margem de erro pequena (ponto flutuante não bate exato)
 function coordsIguais(a, b) {
     return Math.abs(a[0] - b[0]) < 0.000001 && Math.abs(a[1] - b[1]) < 0.000001
 }
@@ -139,6 +142,7 @@ function montarAneis(segmentos) {
     return aneis
 }
 
+// transforma a resposta da Overpass API (OpenStreetMap) no formato GeoJSON que o mapa entende
 function overpassParaGeoJSON(data) {
     const features = []
     for (const el of data.elements) {
@@ -181,6 +185,7 @@ const bordaStyle = {
     fillOpacity: 0.06,
 }
 
+// componente "invisível" só pra escutar clique no mapa e devolver a coordenada
 function CapturaClique({ onMapClick }) {
     useMapEvents({
         click(e) {
@@ -201,6 +206,7 @@ export default function MapGoiania({ pontos = [], onMapClick }) {
     const [setores, setSetores] = useState(null)
     const overpassBuscado = useRef(false)
 
+    // busca o contorno do município direto na API do IBGE
     useEffect(() => {
         fetch(`https://servicodados.ibge.gov.br/api/v3/malhas/municipios/${IBGE_GOIANIA}?formato=application/vnd.geo%2Bjson`)
             .then(r => r.json())
@@ -208,6 +214,7 @@ export default function MapGoiania({ pontos = [], onMapClick }) {
             .catch(() => {})
     }, [])
 
+    // busca os setores com hospital via Overpass e guarda em cache local (consulta é pesada e não muda)
     useEffect(() => {
         if (overpassBuscado.current) return
         overpassBuscado.current = true
@@ -268,6 +275,7 @@ out geom;`
                 />
             )}
 
+            {/* um marcador por ocorrência, com popup de detalhes ao clicar */}
             {pontos.map((ponto, index) => {
                 const icone = ICONES_TIPO[ponto.tipo]
                 const corStatus = STATUS_COLOR[ponto.status] || STATUS_COLOR['Pendente']

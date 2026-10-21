@@ -22,6 +22,7 @@ const TIPO_COLOR = {
 
 const AVATAR_CORES = ['#f97316', '#8b5cf6', '#0d9488', '#2563eb', '#dc2626', '#16a34a', '#db2777']
 
+// pega as iniciais do nome (primeiro + último nome) pro avatar
 function getIniciais(nome) {
     if (!nome) return '—'
     const partes = nome.trim().split(/\s+/)
@@ -30,10 +31,12 @@ function getIniciais(nome) {
     return (primeira + ultima).toUpperCase()
 }
 
+// cor do avatar baseada no id, só pra cada usuário ter uma cor fixa e diferente
 function corAvatar(id) {
     return AVATAR_CORES[id % AVATAR_CORES.length]
 }
 
+// lista de usuários (admins e prestadores), com busca, filtro por tipo e painel de detalhes
 export default function Usuarios() {
     useAuth({ somenteAdmin: true })
     const router = useRouter()
@@ -45,6 +48,7 @@ export default function Usuarios() {
     const [selecionado, setSelecionado] = useState(null)
     const [pagina, setPagina] = useState(1)
 
+    // busca todos os usuários e já deixa de fora quem não for admin/prestador (ex: cidadão)
     useEffect(() => {
         setIsLoading(true)
         listarUsuarios()
@@ -55,6 +59,7 @@ export default function Usuarios() {
             .finally(() => setIsLoading(false))
     }, [])
 
+    // aplica busca por texto e filtro de tipo
     const filtrados = useMemo(() => {
         return usuarios.filter(u => {
             if (busca) {
@@ -81,6 +86,7 @@ export default function Usuarios() {
 
     const filtrosAtivos = tipo !== 'todos'
 
+    // volta o filtro de tipo pro padrão
     function limparFiltros() {
         setTipo('todos')
     }
@@ -90,6 +96,7 @@ export default function Usuarios() {
             <Nav tela="usuarios" />
 
             <main>
+                {/* busca e botão de cadastrar novo usuário */}
                 <div className={styles.search}>
                     <input
                         type="search"
@@ -105,6 +112,7 @@ export default function Usuarios() {
                     <p>Gerencie os administradores e prestadores com acesso ao sistema.</p>
                 </div>
 
+                {/* filtro por tipo (admin/prestador) */}
                 <div className={styles.filtrosCard}>
                     <div className={styles.filtrosHeader}>
                         <span className={styles.filtrosTitulo}>Filtros</span>
@@ -138,6 +146,7 @@ export default function Usuarios() {
                                 <span className={styles.listCount}>{filtrados.length}</span>
                             </div>
 
+                            {/* tabela de usuários, clica na linha pra abrir o painel */}
                             <table className={styles.table}>
                                 <thead>
                                     <tr>
@@ -192,6 +201,7 @@ export default function Usuarios() {
                                 </tbody>
                             </table>
 
+                            {/* paginação */}
                             {!isLoading && filtrados.length > 0 && (
                                 <div className={styles.paginacao}>
                                     <span className={styles.paginacaoInfo}>
@@ -227,6 +237,7 @@ export default function Usuarios() {
                         </div>
                     </div>
 
+                    {/* painel com os dados do usuário clicado */}
                     {selecionado && (
                         <div className={styles.painel}>
                             <div className={styles.painelHeader}>

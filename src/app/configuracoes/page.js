@@ -13,6 +13,7 @@ const TIPO_LABEL = {
 
 const AVATAR_CORES = ['#f97316', '#8b5cf6', '#0d9488', '#2563eb', '#dc2626', '#16a34a', '#db2777']
 
+// pega as iniciais do nome pro avatar
 function getIniciais(nome) {
     if (!nome) return '—'
     const partes = nome.trim().split(/\s+/)
@@ -21,10 +22,12 @@ function getIniciais(nome) {
     return (primeira + ultima).toUpperCase()
 }
 
+// cor fixa do avatar conforme o id
 function corAvatar(id) {
     return AVATAR_CORES[(id || 0) % AVATAR_CORES.length]
 }
 
+// o usuário logado edita o próprio nome, e-mail, telefone, cargo e senha
 export default function Configuracoes() {
     useAuth({ somenteAdmin: true })
 
@@ -40,6 +43,7 @@ export default function Configuracoes() {
     const [cargo, setCargo] = useState('')
     const [novaSenha, setNovaSenha] = useState('')
 
+    // busca o perfil do usuário logado e já preenche o formulário com os dados atuais
     useEffect(() => {
         meuPerfil()
             .then(u => {
@@ -57,6 +61,7 @@ export default function Configuracoes() {
         setErros(prev => ({ ...prev, [campo]: undefined }))
     }
 
+    // nome e e-mail são obrigatórios; senha só valida o tamanho se o campo foi preenchido
     function validar() {
         const novosErros = {}
         if (!nome.trim()) novosErros.nome = 'Informe o nome.'
@@ -66,6 +71,7 @@ export default function Configuracoes() {
         return Object.keys(novosErros).length === 0
     }
 
+    // salva o perfil; só manda a senha no payload se o campo "nova senha" foi preenchido
     async function handleSalvar() {
         if (!validar()) {
             setMensagem({ tipo: 'erro', texto: 'Verifique os campos destacados.' })
@@ -123,6 +129,7 @@ export default function Configuracoes() {
                 ) : (
                     <div className={styles.contentArea}>
 
+                      {/* Coluna esquerda */}
                       <div className={styles.leftCol}>
                         <div className={styles.card}>
                             <h3 className={styles.cardTitulo}>👤 Meu perfil</h3>

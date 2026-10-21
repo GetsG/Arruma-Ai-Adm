@@ -1,5 +1,6 @@
 import styles from './Loading.module.css'
 
+// spinner de carregamento com 3 formatos: inline (dentro de texto), overlay (cobre a tela) ou solto
 export default function Loading({ size = 'medium', text, inline = false, overlay = false }) {
     if (inline) {
         return <span className={`${styles.spinner} ${styles[size]}`} />

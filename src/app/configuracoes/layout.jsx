@@ -1,3 +1,4 @@
+// fundo cinza por trás da tela de configurações
 export default function ConfiguracoesLayout({ children }) {
     return (
         <div style={{ 

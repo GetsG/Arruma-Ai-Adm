@@ -11,10 +11,12 @@ const TIPOS = [
     { valor: 'prestador', label: 'Prestador' },
 ]
 
+// tira tudo que não é dígito — usado tanto pra formatar quanto pra mandar pra API sem máscara
 function apenasNumeros(valor) {
     return (valor || '').replace(/\D/g, '')
 }
 
+// vai formatando o telefone enquanto o usuário digita: (62) 99999-9999
 function formatarTelefone(valor) {
     const n = apenasNumeros(valor).slice(0, 11)
     if (n.length <= 2) return n
@@ -23,6 +25,7 @@ function formatarTelefone(valor) {
     return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`
 }
 
+// mesma ideia, mas formatando como CPF: 000.000.000-00
 function formatarCPF(valor) {
     const n = apenasNumeros(valor).slice(0, 11)
     if (n.length <= 3) return n
@@ -31,6 +34,7 @@ function formatarCPF(valor) {
     return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9)}`
 }
 
+// confere se tem 10 ou 11 dígitos, DDD válido e, se for celular, o 9 na frente
 function validarTelefone(valor) {
     const tel = apenasNumeros(valor)
     if (tel.length !== 10 && tel.length !== 11) return false
@@ -40,6 +44,7 @@ function validarTelefone(valor) {
     return true
 }
 
+// valida o CPF pelo cálculo oficial dos dois dígitos verificadores
 function validarCPF(valor) {
     const cpf = apenasNumeros(valor)
     if (cpf.length !== 11) return false
@@ -60,6 +65,7 @@ function validarCPF(valor) {
     return true
 }
 
+// cadastro de administrador ou prestador (o mesmo formulário serve pros dois)
 export default function NovoUsuario() {
     useAuth({ somenteAdmin: true })
     const router = useRouter()
@@ -75,10 +81,12 @@ export default function NovoUsuario() {
     const [mensagem, setMensagem] = useState(null)
     const [erros, setErros] = useState({})
 
+    // tira o erro de um campo quando o usuário mexe nele
     function limparErro(campo) {
         setErros(prev => ({ ...prev, [campo]: undefined }))
     }
 
+    // checa todos os campos obrigatórios, incluindo telefone/CPF válidos
     function validar() {
         const novosErros = {}
         if (!nome.trim()) novosErros.nome = 'Informe o nome completo.'
@@ -95,6 +103,7 @@ export default function NovoUsuario() {
         return Object.keys(novosErros).length === 0
     }
 
+    // valida e envia o cadastro — telefone e CPF vão sem máscara, só dígitos, como a API espera
     async function handleCadastrar() {
         setMensagem(null)
         if (!validar()) {
@@ -130,6 +139,7 @@ export default function NovoUsuario() {
             <Nav tela="usuarios" />
             <main>
 
+                {/* breadcrumb, título e botões de voltar/salvar */}
                 <div className={styles.topBar}>
                     <div>
                         <p className={styles.breadcrumb}>
@@ -148,6 +158,7 @@ export default function NovoUsuario() {
                     </div>
                 </div>
 
+                {/* erro de validação ou da API */}
                 {mensagem && (
                     <div className={`${styles.mensagem} ${styles[mensagem.tipo]}`}>
                         <span>{mensagem.texto}</span>
@@ -166,6 +177,7 @@ export default function NovoUsuario() {
 
                     {/* Coluna esquerda */}
                     <div className={styles.leftCol}>
+                        {/* nome, cargo, email, telefone, cpf e senha */}
                         <div className={styles.card}>
                             <h3 className={styles.cardTitulo}>Informações pessoais</h3>
 
@@ -247,6 +259,7 @@ export default function NovoUsuario() {
 
                     {/* Coluna direita */}
                     <div className={styles.rightCol}>
+                        {/* admin ou prestador */}
                         <div className={styles.card}>
                             <h3 className={styles.cardTitulo}>Tipo de usuário *</h3>
                             <div className={styles.tipoLista}>
