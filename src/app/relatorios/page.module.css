@@ -114,12 +114,6 @@
     }
 }
 
-.botoesExportar {
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
 .btnExportar {
     background: #2d7a3a;
     color: #fff;
@@ -137,28 +131,6 @@
 }
 
 .btnExportar:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btnExportarPdf {
-    background: #fff;
-    color: #b91c1c;
-    border: 1.5px solid #fecaca;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.btnExportarPdf:hover:not(:disabled) {
-    background: #fef2f2;
-    border-color: #fca5a5;
-}
-
-.btnExportarPdf:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -182,16 +154,17 @@
             letter-spacing: 0.3px;
         }
 
-        input {
+        input, select {
             padding: 8px 10px;
             border: 1px solid #d1d5db;
             border-radius: 7px;
             font-size: 13px;
             color: #111827;
             outline: none;
+            background: #fff;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: #2d7a3a;
             box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.1);
         }
@@ -234,39 +207,6 @@
     font-size: 13px;
 }
 
-.tabela {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-
-    th {
-        text-align: left;
-        padding: 10px 12px;
-        background: #f9fafb;
-        border-bottom: 1px solid #e5e7eb;
-        color: #6b7280;
-        font-weight: 600;
-        font-size: 12px;
-    }
-
-    td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #f3f4f6;
-        color: #111827;
-    }
-
-    tbody tr:last-child td {
-        border-bottom: none;
-    }
-}
-
-.tdTruncar {
-    max-width: 260px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .barItemsList{
     display: flex;
     flex-direction: column;
@@ -289,6 +229,220 @@
 
 .barItemHead b{
     color: #111827;
+}
+
+/* ── Indicadores do sistema ── */
+
+/* KPIs */
+.kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.kpiCard {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.kpiTitulo {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.kpiValor {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.kpiVariacao {
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+/* Funil */
+.funilAviso {
+    font-size: 12.5px;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+}
+
+.funil {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.funilEtapa {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.funilBarraWrap {
+    width: 45%;
+    flex-shrink: 0;
+}
+
+.funilBarra {
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    transition: width 0.2s ease;
+}
+
+.funilInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.funilTitulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.funilSub {
+    font-size: 11.5px;
+    color: #6b7280;
+}
+
+/* Boxplot */
+.boxplotLista {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.boxplotRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.boxplotLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.boxplotMediana {
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.boxplotTrack {
+    position: relative;
+    height: 18px;
+    background: #f3f4f6;
+    border-radius: 4px;
+}
+
+.boxplotWhisker {
+    position: absolute;
+    top: 50%;
+    height: 2px;
+    background: #9ca3af;
+    transform: translateY(-50%);
+}
+
+.boxplotCaixa {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    background: #86efac;
+    border: 1px solid #16a34a;
+    border-radius: 3px;
+    min-width: 3px;
+}
+
+.boxplotMedianaLinha {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #15803d;
+}
+
+.boxplotOutlier {
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #dc2626;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+
+/* O.S. por prazo */
+.listaPrazo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prazoItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #f3f4f6;
+    border-left: 3px solid #6b7280;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.prazoInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.prazoTitulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.prazoSub {
+    font-size: 11.5px;
+    color: #6b7280;
+}
+
+.prazoBadge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 

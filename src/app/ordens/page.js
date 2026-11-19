@@ -4,7 +4,7 @@ import Nav from "../components/Nav/Nav"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { reports, updateStatus } from "../services/reports"
-import { listarOrdensServico, listarOrdensServicoPrestador, atualizarOrdemServico } from "../services/ordens"
+import { listarOrdensServico, listarOrdensServicoPrestador, atualizarOrdemServico, listarPrestadoresCompativeis, vincularPrestador } from "../services/ordens"
 import styles from "./page.module.css"
 
 const LIMITE = 15
@@ -17,11 +17,15 @@ const STATUS_COLOR = {
     'Atribuída':           '#2563eb',
 }
 
+// 'pendentes' e 'aguardando-prestador' só existem pro admin (ocorrência/OS ainda sem atribuição)
 const ABAS = [
-    { chave: 'pendentes', label: 'Pendentes de atribuição', cor: '#d97706' },
+    { chave: 'pendentes', label: 'Ocorrências pendentes', cor: '#f59e0b' },
+    { chave: 'aguardando-prestador', label: 'Pendentes de atribuição', cor: '#d97706' },
     { chave: 'atribuidas', label: 'Atribuídas', cor: '#2563eb' },
     { chave: 'concluidas', label: 'Concluídas', cor: '#059669' },
 ]
+
+const ABAS_SOMENTE_ADMIN = ['pendentes', 'aguardando-prestador']
 
 // Status que o prestador pode escolher ao atualizar uma OS
 const STATUS_ATUALIZAVEIS = ['Em execução', 'Aguardando material', 'Concluída']
@@ -102,6 +106,12 @@ export default function Ordens() {
     const [salvandoOS, setSalvandoOS] = useState(false)
     const [mensagemOS, setMensagemOS] = useState(null)
 
+    // lista de prestadores compatíveis com a OS selecionada, pra quando ela ainda não tem prestador vinculado
+    const [prestadoresCompativeis, setPrestadoresCompativeis] = useState([])
+    const [carregandoPrestadores, setCarregandoPrestadores] = useState(false)
+    const [erroPrestadores, setErroPrestadores] = useState(null)
+    const [vinculandoId, setVinculandoId] = useState(null)
+
     // deixa os campos da API (snake_case) no formato que a tela usa
     function mapearOrdens(ordensData) {
         return ordensData.map(item => ({
@@ -119,7 +129,9 @@ export default function Ordens() {
             concluido: typeof item.concluido === 'boolean' ? item.concluido : undefined,
             descricaoServico: item.descricao_servico,
             observacaoInterna: item.observacao_interna,
+            usuarioid: item.usuarioid,
             prestadorNome: item.prestador_nome,
+            categoria: item.categoria_nome,
             problemaDescricao: item.problema_descricao,
         })).sort((a, b) => b.idordem - a.idordem)
     }
@@ -157,15 +169,16 @@ export default function Ordens() {
         carregarDados()
     }, [usuario])
 
-    const abas = podeVerPendentes ? ABAS : ABAS.filter(a => a.chave !== 'pendentes')
+    const abas = podeVerPendentes ? ABAS : ABAS.filter(a => !ABAS_SOMENTE_ADMIN.includes(a.chave))
 
-    // Nunca deixa "pendentes" ser a aba efetivamente exibida antes de confirmar que dá pra ver (evita flash pro prestador)
-    const abaEfetiva = (abaAtiva === 'pendentes' && !podeVerPendentes) ? 'atribuidas' : abaAtiva
+    // Nunca deixa uma aba admin-only ser a aba efetivamente exibida antes de confirmar que dá pra ver (evita flash pro prestador)
+    const abaEfetiva = (ABAS_SOMENTE_ADMIN.includes(abaAtiva) && !podeVerPendentes) ? 'atribuidas' : abaAtiva
 
     useEffect(() => {
-        if (!podeVerPendentes) setAbaAtiva(prev => prev === 'pendentes' ? 'atribuidas' : prev)
+        if (!podeVerPendentes) setAbaAtiva(prev => ABAS_SOMENTE_ADMIN.includes(prev) ? 'atribuidas' : prev)
     }, [podeVerPendentes])
 
+    // "pendentes" = ocorrência ainda sem nenhuma OS criada
     const pendentes = useMemo(() => {
         const pendentesReais = ocorrencias.filter(o => o.status === 'Pendente')
         if (!busca) return pendentesReais
@@ -177,6 +190,18 @@ export default function Ordens() {
             o.endereco?.toLowerCase().includes(b)
         )
     }, [ocorrencias, busca])
+
+    // "aguardando-prestador" = OS já criada, mas ainda sem prestador vinculado
+    const aguardandoPrestador = useMemo(() => {
+        const reais = ordens.filter(o => o.usuarioid == null && !estaConcluida(o))
+        if (!busca) return reais
+        const b = busca.toLowerCase()
+        return reais.filter(o =>
+            o.protocolo.toLowerCase().includes(b) ||
+            o.tituloOs?.toLowerCase().includes(b) ||
+            o.categoria?.toLowerCase().includes(b)
+        )
+    }, [ordens, busca])
 
     const atribuidas = useMemo(() => {
         const reais = ordens.filter(estaAtiva)
@@ -202,11 +227,15 @@ export default function Ordens() {
 
     const contagens = {
         pendentes: pendentes.length,
+        'aguardando-prestador': aguardandoPrestador.length,
         atribuidas: atribuidas.length,
         concluidas: concluidas.length,
     }
 
-    const dadosAba = abaEfetiva === 'pendentes' ? pendentes : abaEfetiva === 'atribuidas' ? atribuidas : concluidas
+    const dadosAba = abaEfetiva === 'pendentes' ? pendentes
+        : abaEfetiva === 'aguardando-prestador' ? aguardandoPrestador
+        : abaEfetiva === 'atribuidas' ? atribuidas
+        : concluidas
     const totalAba = dadosAba.length
     const dadosPagina = dadosAba.slice((pagina - 1) * LIMITE, pagina * LIMITE)
 
@@ -234,6 +263,37 @@ export default function Ordens() {
     function trocarAba(chave) {
         setAbaAtiva(chave)
         setSelecionada(null)
+    }
+
+    // quando a OS selecionada ainda não tem prestador, busca na API quem é compatível com a categoria dela
+    useEffect(() => {
+        if (selecionada?.idordem !== undefined && selecionada.usuarioid == null) {
+            setCarregandoPrestadores(true)
+            setErroPrestadores(null)
+            listarPrestadoresCompativeis(selecionada.idordem)
+                .then(resposta => setPrestadoresCompativeis(resposta.data || []))
+                .catch(() => setErroPrestadores('Não foi possível carregar os prestadores compatíveis.'))
+                .finally(() => setCarregandoPrestadores(false))
+        } else {
+            setPrestadoresCompativeis([])
+        }
+    }, [selecionada])
+
+    // vincula o prestador escolhido à OS selecionada e recarrega a listagem
+    async function handleEscolherPrestador(usuarioid) {
+        setVinculandoId(usuarioid)
+        setErroPrestadores(null)
+        try {
+            await vincularPrestador(selecionada.idordem, usuarioid)
+            setMensagemOS({ tipo: 'sucesso', texto: 'Prestador vinculado com sucesso!' })
+            setSelecionada(null)
+            carregarDados()
+        } catch (err) {
+            const motivo = err.response?.data?.message || err.response?.data?.error
+            setErroPrestadores(motivo ? `Erro ao vincular prestador: ${motivo}` : 'Erro ao vincular o prestador. Tente novamente.')
+        } finally {
+            setVinculandoId(null)
+        }
     }
 
     // prestador salva a atualização da OS e, se deu certo, já reflete o status na ocorrência de origem
@@ -345,7 +405,7 @@ export default function Ordens() {
                                             <th className={styles.thCheck}><input type="checkbox" /></th>
                                             <th>Protocolo</th>
                                             <th>Título da OS</th>
-                                            <th>Prestador</th>
+                                            <th>{abaEfetiva === 'aguardando-prestador' ? 'Categoria' : 'Prestador'}</th>
                                             <th>Prioridade</th>
                                             <th>Status</th>
                                             <th>Ações</th>
@@ -388,7 +448,9 @@ export default function Ordens() {
                                     ) : dadosPagina.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className={styles.carregando}>
-                                                Nenhuma ordem de serviço {abaEfetiva === 'atribuidas' ? 'atribuída' : 'concluída'} ainda.
+                                                {abaEfetiva === 'aguardando-prestador'
+                                                    ? 'Nenhuma ordem de serviço aguardando prestador.'
+                                                    : `Nenhuma ordem de serviço ${abaEfetiva === 'atribuidas' ? 'atribuída' : 'concluída'} ainda.`}
                                             </td>
                                         </tr>
                                     ) : dadosPagina.map(os => (
@@ -401,7 +463,9 @@ export default function Ordens() {
                                             <td className={styles.tdCheck} onClick={e => e.stopPropagation()}><input type="checkbox" /></td>
                                             <td className={styles.protocolo}>{os.protocolo}</td>
                                             <td className={styles.tdEndereco}>{os.tituloOs}</td>
-                                            <td className={styles.tdEndereco}>{os.prestadorNome || '—'}</td>
+                                            <td className={styles.tdEndereco}>
+                                                {abaEfetiva === 'aguardando-prestador' ? (os.categoria || '—') : (os.prestadorNome || '—')}
+                                            </td>
                                             <td>{os.prioridade || '—'}</td>
                                             <td>
                                                 <span
@@ -426,7 +490,12 @@ export default function Ordens() {
                                 total={totalAba}
                                 limite={LIMITE}
                                 onChange={setPagina}
-                                sufixo={abaEfetiva === 'pendentes' ? 'pendentes' : abaEfetiva === 'atribuidas' ? 'atribuídas' : 'concluídas'}
+                                sufixo={
+                                    abaEfetiva === 'pendentes' ? 'pendentes'
+                                        : abaEfetiva === 'aguardando-prestador' ? 'aguardando prestador'
+                                        : abaEfetiva === 'atribuidas' ? 'atribuídas'
+                                        : 'concluídas'
+                                }
                             />
                         </div>
 
@@ -584,6 +653,43 @@ export default function Ordens() {
                                     </div>
                                     <button className={styles.btnAtribuir} onClick={handleAtualizarOS} disabled={salvandoOS}>
                                         {salvandoOS ? 'Salvando...' : '✓ Atualizar ordem de serviço'}
+                                    </button>
+                                </div>
+                            ) : selecionada.usuarioid == null ? (
+                                /* OS ainda sem prestador — mostra quem é compatível pra atribuir agora */
+                                <div className={styles.painelAtribuirPrestador}>
+                                    <span className={styles.painelLabel}>Selecionar prestador</span>
+
+                                    {erroPrestadores && <div className={`${styles.mensagem} ${styles.erro}`}>{erroPrestadores}</div>}
+
+                                    {carregandoPrestadores ? (
+                                        <p className={styles.carregandoPrestadoresTexto}>Carregando prestadores compatíveis...</p>
+                                    ) : prestadoresCompativeis.length === 0 ? (
+                                        <p className={styles.carregandoPrestadoresTexto}>Nenhum prestador compatível disponível agora.</p>
+                                    ) : (
+                                        <div className={styles.prestadorSelecaoLista}>
+                                            {prestadoresCompativeis.map(p => (
+                                                <div key={p.usuarioid} className={styles.prestadorSelecaoCard}>
+                                                    <div className={styles.prestadorSelecaoInfo}>
+                                                        <span className={styles.prestadorSelecaoNome}>{p.nome}{p.cargo ? ` — ${p.cargo}` : ''}</span>
+                                                        <span className={p.os_em_aberto === 0 ? styles.badgeOcioso : styles.badgeOcupado}>
+                                                            {p.os_em_aberto} OS em aberto
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        className={styles.btnEscolherPrestador}
+                                                        onClick={() => handleEscolherPrestador(p.usuarioid)}
+                                                        disabled={vinculandoId !== null}
+                                                    >
+                                                        {vinculandoId === p.usuarioid ? 'Vinculando...' : 'Escolher'}
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <button className={styles.painelLinkOrigem} onClick={() => router.push(`/ocorrencias/editar/${selecionada.problemaid}`)}>
+                                        🔗 Ver ocorrência de origem
                                     </button>
                                 </div>
                             ) : (

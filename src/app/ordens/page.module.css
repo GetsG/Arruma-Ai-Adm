@@ -533,3 +533,103 @@
     border-color: #2d7a3a;
     box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.12);
 }
+
+/* SELEÇÃO DE PRESTADOR (OS sem prestador ainda, no painel lateral) */
+.painelAtribuirPrestador {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.carregandoPrestadoresTexto {
+    font-size: 12.5px;
+    color: #9ca3af;
+}
+
+.prestadorSelecaoLista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prestadorSelecaoCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.prestadorSelecaoInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.prestadorSelecaoNome {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.badgeOcioso {
+    width: fit-content;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.badgeOcupado {
+    width: fit-content;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.btnEscolherPrestador {
+    background: #2d7a3a;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.btnEscolherPrestador:hover:not(:disabled) {
+    background: #255f2e;
+}
+
+.btnEscolherPrestador:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.painelLinkOrigem {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    text-align: left;
+}
+
+.painelLinkOrigem:hover {
+    color: #374151;
+}

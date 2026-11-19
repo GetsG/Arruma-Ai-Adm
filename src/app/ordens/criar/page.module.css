@@ -525,3 +525,172 @@
     align-items: center;
     gap: 8px;
 }
+
+/* SELEÇÃO DE PRESTADOR (depois que a OS já foi criada) */
+.prestadorLista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.prestadorCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.prestadorInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.prestadorNome {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.prestadorContato {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.prestadorBadges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.badgeOcioso {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+}
+
+.badgeOcupado {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+}
+
+.badgeCategoria {
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 999px;
+}
+
+.btnEscolherPrestador {
+    background: #2d7a3a;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.btnEscolherPrestador:hover:not(:disabled) {
+    background: #255f2e;
+}
+
+.btnEscolherPrestador:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.semPrestadores {
+    text-align: center;
+    padding: 30px 16px;
+    color: #6b7280;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* TOOLTIP com os dados da ocorrência/OS, pra consultar sem poluir a tela de escolha do prestador */
+.infoTrigger {
+    position: relative;
+    display: inline-flex;
+}
+
+.infoIcone {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 5px 12px;
+    cursor: default;
+    white-space: nowrap;
+}
+
+.infoTrigger:hover .infoIcone {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.infoPanel {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 300px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    z-index: 30;
+
+    p {
+        font-size: 12.5px;
+        color: #374151;
+        margin: 2px 0 8px;
+        line-height: 1.4;
+    }
+
+    strong {
+        color: #111827;
+    }
+}
+
+.infoTrigger:hover .infoPanel {
+    display: block;
+}
+
+.infoTituloSecao {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #2d7a3a;
+    margin-bottom: 8px;
+}
+
+.infoDivisor {
+    height: 1px;
+    background: #f3f4f6;
+    margin: 12px 0;
+}
